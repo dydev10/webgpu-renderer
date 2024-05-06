@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebGPU TS</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1 id="compatibility-check"></h1>
+      <canvas id="gfx-main" width="800" height="600" style="background-color: grey;"></canvas>
+      <div class="debug-grid--input">
+        <h2>Current Key: </h2><h2 id="key-label"></h2>
+        <h2>Mouse X: </h2><h2 id="mouse-x-label"></h2>
+        <h2>Mouse Y: </h2><h2 id="mouse-y-label"></h2>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
