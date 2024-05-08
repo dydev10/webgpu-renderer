@@ -12,6 +12,7 @@ export class App {
 
   forwardsAmount: number;
   rightAmount: number;
+  isPointerLocked: boolean;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,6 +21,7 @@ export class App {
     
     this.forwardsAmount = 0;
     this.rightAmount = 0;
+    this.isPointerLocked = false;
 
     // Debug
     this.keyLabel = document.querySelector('#key-label') as HTMLElement;
@@ -32,7 +34,8 @@ export class App {
     document.addEventListener('mousemove', this.handleMouseMove);
 
     // Canvas click lock
-    this.canvas.addEventListener('click', this.handleClickLock);
+    this.canvas.addEventListener('click', this.handleClickToPointerLock);
+    document.addEventListener('pointerlockchange', this.handlePointerLockChange);
   }
 
   async init() {
@@ -90,6 +93,11 @@ export class App {
   }
 
   handleMouseMove = (event: MouseEvent) => {
+    // SKip if not pointer locked
+    if(!this.isPointerLocked) {
+      return;
+    }
+
     this.mouseXLabel.innerText = event.clientX.toString();    
     this.mouseYLabel.innerText = event.clientY.toString();
     
@@ -99,7 +107,17 @@ export class App {
     );
   }
 
-  handleClickLock = () => {
+  handleClickToPointerLock = () => {
+    if(!this.isPointerLocked) {
     this.canvas.requestPointerLock();
+    }
+  }
+
+  handlePointerLockChange = () => {
+    if (document.pointerLockElement === this.canvas) {
+        this.isPointerLocked = true;
+    } else {
+      this.isPointerLocked = false;
+    }
   }
 }
