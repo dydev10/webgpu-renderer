@@ -50,7 +50,8 @@ export class App {
 
     this.renderer.render(
       this.scene.getPlayer(),
-      this.scene.getTriangles()
+      this.scene.getTriangles(),
+      this.scene.triangleCount
     );
 
     if(running) {
@@ -109,7 +110,7 @@ export class App {
 
   handleClickToPointerLock = () => {
     if(!this.isPointerLocked) {
-    this.canvas.requestPointerLock();
+      this.canvas.requestPointerLock();
     }
   }
 
