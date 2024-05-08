@@ -1,21 +1,27 @@
 import { mat4, vec3 } from "gl-matrix";
 import { Camera } from "./camera";
 import { Triangle } from "./triangle";
+import { Quad } from "./quad";
+import { RenderData, objectTypes } from "./definitions";
 
 
 export class Scene{
   triangles: Triangle[];
+  quads: Quad[];
   player: Camera;
   objectData: Float32Array;
   triangleCount: number;
+  quadCount: number;
 
   constructor() {
     this.triangles = [];
+    this.quads = [];
     this.objectData = new Float32Array(16 * 1024);
     this.triangleCount = 0;
+    this.quadCount = 0;
 
     this.generateTriangles();        
-
+    this.generateQuads();
     this.player = new Camera(
       [-2, 0, 0.5],
       0,
@@ -28,7 +34,14 @@ export class Scene{
       (triangle: Triangle, index: number) => {
         triangle.update();
         const model = triangle.getModel();
-        this.updateTriangleModelMatrix(index, model);
+        this.updateObjectBufferFromModelMatrix(index, model);
+      }
+    );
+    this.quads.forEach(
+      (quad: Quad, index: number) => {
+        quad.update();
+        const model = quad.getModel();
+        this.updateObjectBufferFromModelMatrix(index + this.triangleCount, model);
       }
     );
 
@@ -66,27 +79,53 @@ export class Scene{
   getPlayer(): Camera {
     return this.player;
   }
-  getTriangles(): Float32Array {
-    return this.objectData;
+
+  getRenderables(): RenderData {
+    return {
+      viewTransform: this.player.getView(),
+      modelTransforms: this.objectData,
+      objectCounts: {
+        [objectTypes.TRIANGLE]: this.triangleCount,
+        [objectTypes.QUAD]: this.quadCount,
+      }
+    };
   }
 
   // static functions
   generateTriangles(): void {
     let i = 0;
-    for (let y = 0; y < 5; y++) {
+    for (let y = -5; y <= 5; y++) {
       this.triangles.push(
         new Triangle([2, y, 0], 0)
       );
 
       const blankMatrix = mat4.create();
-      this.updateTriangleModelMatrix(i, blankMatrix);
+      this.updateObjectBufferFromModelMatrix(i, blankMatrix);
       i++;
       this.triangleCount++;
     }
     return;
   }
 
-  updateTriangleModelMatrix(index: number, model = mat4.create()): void {
+  // static functions
+  generateQuads(): void {
+    let i = this.triangleCount;
+    for (let x = -10; x <= 10; x++) {      
+      for (let y = -10; y <= 10; y++) {
+        this.quads.push(
+          new Quad([x, y, 0])
+        );
+  
+        const blankMatrix = mat4.create();
+        this.updateObjectBufferFromModelMatrix(i, blankMatrix);
+        i++;
+        this.quadCount++;
+      }
+    }
+    return;
+  }
+
+  updateObjectBufferFromModelMatrix(index: number, model = mat4.create()): void {
     for (let j = 0; j < 16; j++) {
       this.objectData[16 * index + j] = model.at(j) as number;
     }
