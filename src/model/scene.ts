@@ -3,11 +3,13 @@ import { Camera } from "./camera";
 import { Triangle } from "./triangle";
 import { Quad } from "./quad";
 import { RenderData, objectTypes } from "./definitions";
+import { Statue } from "./statue";
 
 
 export class Scene{
   triangles: Triangle[];
   quads: Quad[];
+  statue: Statue;
   player: Camera;
   objectData: Float32Array;
   triangleCount: number;
@@ -22,6 +24,12 @@ export class Scene{
 
     this.generateTriangles();        
     this.generateQuads();
+
+    this.statue = new Statue(
+      [0, 0, 0],
+      [0, 0, 0]
+    );
+
     this.player = new Camera(
       [-2, 0, 0.5],
       0,
@@ -44,6 +52,11 @@ export class Scene{
         this.updateObjectBufferFromModelMatrix(index + this.triangleCount, model);
       }
     );
+
+    this.statue.update();
+    const statueModel = this.statue.getModel();
+    this.updateObjectBufferFromModelMatrix(this.triangleCount + this.quadCount, statueModel);
+
 
     this.player.update();
   }

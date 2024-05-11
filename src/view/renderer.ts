@@ -4,6 +4,7 @@ import { Material } from "./material";
 import { TriangleMesh } from "./triangleMesh";
 import { QuadMesh } from "./quadMesh";
 import { objectTypes, RenderData } from "../model/definitions";
+import { ObjMesh } from "./objMesh";
 
 export class Renderer {
   canvas: HTMLCanvasElement;
@@ -32,6 +33,7 @@ export class Renderer {
   // Assets
   triangleMesh!: TriangleMesh;
   quadMesh!: QuadMesh;
+  statueMesh!: ObjMesh;
   triangleMaterial!: Material;
   quadMaterial!: Material;
   objectBuffer!: GPUBuffer;
@@ -103,6 +105,9 @@ export class Renderer {
     this.quadMesh = new QuadMesh(this.device);
     this.triangleMaterial = new Material();
     this.quadMaterial = new Material();
+    
+    this.statueMesh = new ObjMesh();
+    this.statueMesh.initialize(this.device, '/model/ground.obj');
 
     this.uniformBuffer = this.device.createBuffer({
       size: 64 * 3,
@@ -252,7 +257,7 @@ export class Renderer {
     );
     drawnObjectCount += renderables.objectCounts[objectTypes.TRIANGLE];
     
-    // Triangles
+    // Quads
     renderPass.setBindGroup(1, this.quadMaterial.bindGroup);
     renderPass.setVertexBuffer(0, this.quadMesh.buffer);
     renderPass.draw(
@@ -263,6 +268,17 @@ export class Renderer {
     );
     drawnObjectCount += renderables.objectCounts[objectTypes.QUAD];
 
+
+    // Statue
+    renderPass.setBindGroup(1, this.triangleMaterial.bindGroup);
+    renderPass.setVertexBuffer(0, this.statueMesh.buffer);
+    renderPass.draw(
+      this.statueMesh.vertexCount,
+      1,
+      0,
+      drawnObjectCount
+    );
+    drawnObjectCount += 1;
 
     renderPass.end();
   
