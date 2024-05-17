@@ -8,4 +8,12 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   ...tseslint.configs.stylistic,
+  
+  // Custom rules
+  {
+    rules: {
+      "semi": "off",
+      "@typescript-eslint/semi": ["error", "always"],
+    }
+  }
 ];
