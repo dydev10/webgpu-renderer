@@ -135,7 +135,7 @@ export class Renderer {
       width: this.canvas.width,
       height: this.canvas.height,
       depthOrArrayLayers: 1,
-    }
+    };
     const depthBufferDescriptor: GPUTextureDescriptor = {
       size: size,
       format: 'depth24plus-stencil8',
@@ -157,7 +157,7 @@ export class Renderer {
       depthStoreOp: 'store',
       stencilLoadOp: 'clear',
       stencilStoreOp: 'discard',
-    }
+    };
   }
 
   async makePipeline() {
@@ -207,7 +207,7 @@ export class Renderer {
           }
         },
       ]
-    })
+    });
   }
 
   async render(renderables: RenderData) {
