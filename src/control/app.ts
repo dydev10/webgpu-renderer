@@ -49,13 +49,14 @@ export class App {
     this.scene.movePlayer(this.forwardsAmount, this.rightAmount);
 
     this.renderer.render(
-      this.scene.getRenderables()
+      this.scene.getRenderables(),
+      this.scene.getPlayer()
     );
 
     if(running) {
       requestAnimationFrame(this.run);
     }
-  }
+  };
 
   handleKeyPress = (event: KeyboardEvent) => {
     this.keyLabel.innerText = event.code;    
@@ -72,7 +73,7 @@ export class App {
     if (event.code === 'KeyD') {
       this.rightAmount = 0.02;
     }
-  }
+  };
 
   handleKeyRelease = (event: KeyboardEvent) => {
     // this.keyLabel.innerText = '';        
@@ -89,7 +90,7 @@ export class App {
     if (event.code === 'KeyD') {
       this.rightAmount = 0;
     }
-  }
+  };
 
   handleMouseMove = (event: MouseEvent) => {
     // SKip if not pointer locked
@@ -104,13 +105,13 @@ export class App {
       event.movementX / 5,
       -event.movementY / 5
     );
-  }
+  };
 
   handleClickToPointerLock = () => {
     if(!this.isPointerLocked) {
       this.canvas.requestPointerLock();
     }
-  }
+  };
 
   handlePointerLockChange = () => {
     if (document.pointerLockElement === this.canvas) {
@@ -118,5 +119,5 @@ export class App {
     } else {
       this.isPointerLocked = false;
     }
-  }
+  };
 }

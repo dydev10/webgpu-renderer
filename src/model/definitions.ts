@@ -5,6 +5,11 @@ export enum objectTypes {
   QUAD,
 };
 
+export enum pipelineTypes {
+  STANDARD,
+  SKY,
+};
+
 export interface RenderData {
   viewTransform: mat4;
   modelTransforms: Float32Array;
