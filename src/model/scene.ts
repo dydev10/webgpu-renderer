@@ -71,7 +71,7 @@ export class Scene{
         this.player.eulers[1] + dY
       )
     );
-  }
+  };
 
   movePlayer = (forwardsAmount: number, rightAmount: number) =>  {
     vec3.scaleAndAdd(
@@ -87,7 +87,7 @@ export class Scene{
       this.player.right,
       rightAmount
     );
-  }
+  };
 
   getPlayer(): Camera {
     return this.player;

@@ -7,7 +7,7 @@ import { QuadMesh } from "./quadMesh";
 import { objectTypes, pipelineTypes, RenderData } from "../model/definitions";
 import { ObjMesh } from "./objMesh";
 import { Camera } from "../model/camera";
-import { CubeMapMaterial } from "./CubeMapMaterial";
+import { CubeMapMaterial } from "./cubeMapMaterial";
 
 export class Renderer {
   canvas: HTMLCanvasElement;

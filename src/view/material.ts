@@ -20,7 +20,7 @@ export class Material {
       mipLevelCount: 1,
       baseArrayLayer: 0,
       arrayLayerCount: 1,
-    }
+    };
     this.view = this.texture.createView(viewDescriptor);
 
     const samplerDescriptor: GPUSamplerDescriptor = {
