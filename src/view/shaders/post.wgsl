@@ -22,7 +22,7 @@ fn vs_main(@builtin(vertex_index) VertexIndex: u32) -> Fragment {
 
   var pos: vec2<f32> = positions[VertexIndex];
   output.Position = vec4<f32>(pos, 0.0, 1.0);
-  output.TexCoord = 0.5 * (pos + vec2(1.0));
+  output.TexCoord = vec2<f32>(0.5, -0.5) * (pos + vec2(1.0));
 
   return output;
 }
