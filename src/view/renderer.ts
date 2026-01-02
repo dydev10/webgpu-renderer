@@ -1,6 +1,7 @@
 import { mat4 } from "gl-matrix";
 import shader from "./shaders/shaders.wgsl?raw";
 import skyShader from "./shaders/skyShader.wgsl?raw";
+import postShader from "./shaders/post.wgsl?raw";
 import { Material } from "./material";
 import { TriangleMesh } from "./triangleMesh";
 import { QuadMesh } from "./quadMesh";
@@ -8,6 +9,7 @@ import { objectTypes, pipelineTypes, RenderData } from "../model/definitions";
 import { ObjMesh } from "./objMesh";
 import { Camera } from "../model/camera";
 import { CubeMapMaterial } from "./cubeMapMaterial";
+import { FrameBuffer } from "./frameBuffer";
 
 export class Renderer {
   canvas: HTMLCanvasElement;
@@ -41,6 +43,7 @@ export class Renderer {
   objectBuffer!: GPUBuffer;
   parameterBuffer!: GPUBuffer;
   skyMaterial!: CubeMapMaterial;
+  frameBuffer!: FrameBuffer;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -48,16 +51,19 @@ export class Renderer {
     this.pipelines = {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY] : null,
+      [pipelineTypes.POST] : null,
     };
 
     this.frameGroupLayouts = {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY]: null,
+      [pipelineTypes.POST] : null,
     };
 
     this.frameBindGroups = {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY]: null,
+      [pipelineTypes.POST] : null,
     };
   }
 
@@ -127,6 +133,23 @@ export class Renderer {
       ],
     });
 
+    this.frameGroupLayouts[pipelineTypes.POST] = this.device.createBindGroupLayout({
+      entries:[
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: {
+            viewDimension: '2d',
+          },
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: {},
+        },
+      ],
+    });
+
     this.materialGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
@@ -149,6 +172,7 @@ export class Renderer {
     this.triangleMaterial = new Material();
     this.quadMaterial = new Material();
     this.skyMaterial = new CubeMapMaterial();
+    this.frameBuffer = new FrameBuffer();
     
     this.statueMesh = new ObjMesh();
     this.statueMesh.initialize(this.device, '/model/ground.obj');
@@ -183,6 +207,8 @@ export class Renderer {
       '/img/sky_bottom.png',  // z-
     ];
     await this.skyMaterial.initialize(this.device, urls);
+
+    await this.frameBuffer.init(this.device, this.canvas, this.frameGroupLayouts[pipelineTypes.POST]!, this.format);
   }
 
   async makeDepthBufferResources() {
@@ -281,6 +307,35 @@ export class Renderer {
       layout: pipelineLayout,
       depthStencil: this.depthStencilState
     });
+
+    pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [
+        this.frameGroupLayouts[pipelineTypes.POST] as GPUBindGroupLayout,
+      ]
+    });
+
+    this.pipelines[pipelineTypes.POST] = this.device.createRenderPipeline({
+      vertex: {
+        module: this.device.createShaderModule({
+          code: postShader,
+        }),
+        entryPoint: 'vs_main',
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: postShader,
+        }),
+        entryPoint: 'fs_main',
+        targets: [{
+          format: this.format,
+        }]
+      },
+      primitive: {
+        topology: 'triangle-list',
+      },
+      layout: pipelineLayout,
+    });
+
   }
 
   async makeBindGroup() {
@@ -370,18 +425,28 @@ export class Renderer {
   }
 
   async render(renderables: RenderData, camera: Camera) {
-    this.prepareScene(renderables, camera);
-
     /**
      * Command Encoder
      */
     const commandEncoder: GPUCommandEncoder = this.device.createCommandEncoder();
-    const textureView: GPUTextureView = this.context.getCurrentTexture().createView();
+    
+    this.drawScene(renderables, camera, commandEncoder);
+
+    this.applyPostProcessing(commandEncoder);
+
+    // Submit command buffer
+    this.device.queue.submit([commandEncoder.finish()]);
+  }
+
+  drawScene(renderables: RenderData, camera: Camera, commandEncoder: GPUCommandEncoder) {
+    this.prepareScene(renderables, camera);
+
+    // renderPass holds the draw commands allocated by command encoder
     const renderPass: GPURenderPassEncoder = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: textureView,
-          clearValue: { r: 0.5, g: 0.1, b: 0.25, a: 1.0 },
+          view: this.frameBuffer.view,
+          // clearValue: { r: 0.5, g: 0.1, b: 0.25, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store',
         },
@@ -436,8 +501,25 @@ export class Renderer {
     drawnObjectCount += 1;
 
     renderPass.end();
-  
-    // Submit command buffer
-    this.device.queue.submit([commandEncoder.finish()]);
+  }
+
+  async applyPostProcessing(commandEncoder: GPUCommandEncoder) {
+    const textureView: GPUTextureView = this.context.getCurrentTexture().createView();
+    const renderPass: GPURenderPassEncoder = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: textureView,
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPass.setPipeline(this.pipelines[pipelineTypes.POST] as GPURenderPipeline);
+    // renderPass.setBindGroup(0, this.frameBindGroups[pipelineTypes.POST]);
+    renderPass.setBindGroup(0, this.frameBuffer.bindGroup);
+    renderPass.draw(6, 1, 0, 0);  // TODO: check vertexCount passed here
+
+    renderPass.end();
   }
 }

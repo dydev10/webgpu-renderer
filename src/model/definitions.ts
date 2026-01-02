@@ -8,6 +8,7 @@ export enum objectTypes {
 export enum pipelineTypes {
   STANDARD,
   SKY,
+  POST,
 };
 
 export interface RenderData {
