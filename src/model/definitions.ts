@@ -9,6 +9,7 @@ export enum pipelineTypes {
   STANDARD,
   SKY,
   POST,
+  GUN,
 };
 
 export interface RenderData {

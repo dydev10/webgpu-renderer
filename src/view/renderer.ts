@@ -2,6 +2,7 @@ import { mat4 } from "gl-matrix";
 import shader from "./shaders/shaders.wgsl?raw";
 import skyShader from "./shaders/skyShader.wgsl?raw";
 import postShader from "./shaders/post.wgsl?raw";
+import gunShader from "./shaders/gunShader.wgsl?raw"
 import { Material } from "./material";
 import { TriangleMesh } from "./triangleMesh";
 import { QuadMesh } from "./quadMesh";
@@ -20,7 +21,6 @@ export class Renderer {
   context!: GPUCanvasContext;
   format!: GPUTextureFormat;
   
-
   // Pipeline objects
   uniformBuffer!: GPUBuffer;
   pipelines: {[pipeline in pipelineTypes]: GPURenderPipeline | null};
@@ -28,12 +28,6 @@ export class Renderer {
   frameBindGroups!: {[pipeline in pipelineTypes]: GPUBindGroup | null};
   materialGroupLayout!: GPUBindGroupLayout;
 
-  // Depth Testing objects
-  depthStencilState!: GPUDepthStencilState;
-  depthStencilBuffer!: GPUTexture;
-  depthStencilView!: GPUTextureView;
-  depthStencilAttachment!: GPURenderPassDepthStencilAttachment;
-  
   // Assets
   triangleMesh!: TriangleMesh;
   quadMesh!: QuadMesh;
@@ -44,6 +38,9 @@ export class Renderer {
   parameterBuffer!: GPUBuffer;
   skyMaterial!: CubeMapMaterial;
   frameBuffer!: FrameBuffer;
+  gunFrameBuffer!: FrameBuffer;
+  gunMesh!: ObjMesh;
+  gunMaterial!: Material;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -52,18 +49,21 @@ export class Renderer {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY] : null,
       [pipelineTypes.POST] : null,
+      [pipelineTypes.GUN] : null,
     };
 
     this.frameGroupLayouts = {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY]: null,
       [pipelineTypes.POST] : null,
+      [pipelineTypes.GUN] : null,
     };
 
     this.frameBindGroups = {
       [pipelineTypes.STANDARD]: null,
       [pipelineTypes.SKY]: null,
       [pipelineTypes.POST] : null,
+      [pipelineTypes.GUN] : null,
     };
   }
 
@@ -71,7 +71,6 @@ export class Renderer {
     await this.setupDevice();
     await this.makeBindGroupLayouts();
     await this.createAssets();
-    await this.makeDepthBufferResources();
     await this.makePipeline();
     await this.makeBindGroup();
     // this.render();
@@ -150,6 +149,18 @@ export class Renderer {
       ],
     });
 
+    this.frameGroupLayouts[pipelineTypes.GUN] = this.device.createBindGroupLayout({
+      entries:[
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {
+            type: 'uniform',
+          },
+        },
+      ],
+    });
+
     this.materialGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
@@ -172,10 +183,11 @@ export class Renderer {
     this.triangleMaterial = new Material();
     this.quadMaterial = new Material();
     this.skyMaterial = new CubeMapMaterial();
-    this.frameBuffer = new FrameBuffer();
+    this.frameBuffer = new FrameBuffer('Scene Layer');
+    this.gunFrameBuffer= new FrameBuffer('Gun Layer');
     
     this.statueMesh = new ObjMesh();
-    this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false);
+    await this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false);
 
     this.uniformBuffer = this.device.createBuffer({
       size: 64 * 3,
@@ -208,43 +220,16 @@ export class Renderer {
     ];
     await this.skyMaterial.initialize(this.device, urls);
 
-    await this.frameBuffer.init(this.device, this.canvas, this.frameGroupLayouts[pipelineTypes.POST]!, this.format);
-  }
+    // Screen Frame Buffer
+    await this.frameBuffer.init(this.device, this.canvas, this.materialGroupLayout, this.format, true);
 
-  async makeDepthBufferResources() {
-    this.depthStencilState = {
-      format: 'depth24plus-stencil8',
-      depthWriteEnabled: true,
-      depthCompare: 'less-equal',
-    };
-
-    const size: GPUExtent3D = {
-      width: this.canvas.width,
-      height: this.canvas.height,
-      depthOrArrayLayers: 1,
-    };
-    const depthBufferDescriptor: GPUTextureDescriptor = {
-      size: size,
-      format: 'depth24plus-stencil8',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    };
-    this.depthStencilBuffer = this.device.createTexture(depthBufferDescriptor);
-
-    const depthViewDescriptor: GPUTextureViewDescriptor = {
-      format: 'depth24plus-stencil8',
-      dimension: '2d',
-      aspect: 'all',
-    };
-    this.depthStencilView = this.depthStencilBuffer.createView(depthViewDescriptor);
-
-    this.depthStencilAttachment = {
-      view: this.depthStencilView,
-      depthClearValue: 1.0,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-      stencilLoadOp: 'clear',
-      stencilStoreOp: 'discard',
-    };
+    // Gun Frame Buffer
+    await this.gunFrameBuffer.init(this.device, this.canvas, this.materialGroupLayout, this.format, true);
+    
+    this.gunMesh = new ObjMesh();
+    await this.gunMesh.initialize(this.device, '/model/gun.obj', true, true, true);
+    this.gunMaterial = new Material();
+    await this.gunMaterial.init(this.device, '/img/gun.png', this.materialGroupLayout);
   }
 
   async makePipeline() {
@@ -276,7 +261,7 @@ export class Renderer {
         topology: 'triangle-list',
       },
       layout: pipelineLayout,
-      depthStencil: this.depthStencilState
+      depthStencil: this.frameBuffer.depthStencilState
     });
 
     pipelineLayout = this.device.createPipelineLayout({
@@ -305,7 +290,7 @@ export class Renderer {
         topology: 'triangle-list',
       },
       layout: pipelineLayout,
-      depthStencil: this.depthStencilState
+      depthStencil: this.frameBuffer.depthStencilState
     });
 
     pipelineLayout = this.device.createPipelineLayout({
@@ -336,6 +321,36 @@ export class Renderer {
       layout: pipelineLayout,
     });
 
+    pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [
+        this.frameGroupLayouts[pipelineTypes.GUN] as GPUBindGroupLayout,
+        this.materialGroupLayout,
+      ]
+    });
+
+    this.pipelines[pipelineTypes.GUN] = this.device.createRenderPipeline({
+      vertex: {
+        module: this.device.createShaderModule({
+          code: gunShader,
+        }),
+        entryPoint: 'vs_main',
+        buffers: [this.gunMesh.bufferLayout]
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: gunShader,
+        }),
+        entryPoint: 'fs_main',
+        targets: [{
+          format: this.format,
+        }]
+      },
+      primitive: {
+        topology: 'triangle-list',
+      },
+      layout: pipelineLayout,
+      depthStencil: this.gunFrameBuffer.depthStencilState
+    });
   }
 
   async makeBindGroup() {
@@ -373,6 +388,18 @@ export class Renderer {
         {
           binding: 2,
           resource: this.skyMaterial.sampler
+        },
+      ]
+    });
+
+    this.frameBindGroups[pipelineTypes.GUN] = this.device.createBindGroup({
+      layout: this.frameGroupLayouts[pipelineTypes.GUN] as GPUBindGroupLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: this.uniformBuffer
+          }
         },
       ]
     });
@@ -430,29 +457,20 @@ export class Renderer {
      */
     const commandEncoder: GPUCommandEncoder = this.device.createCommandEncoder();
     
-    this.drawScene(renderables, camera, commandEncoder);
+    this.drawWorld(renderables, camera, commandEncoder);
 
-    this.applyPostProcessing(commandEncoder);
+    this.drawGun(commandEncoder);
+
+    this.drawScreen(commandEncoder);
 
     // Submit command buffer
     this.device.queue.submit([commandEncoder.finish()]);
   }
 
-  drawScene(renderables: RenderData, camera: Camera, commandEncoder: GPUCommandEncoder) {
+  drawWorld(renderables: RenderData, camera: Camera, commandEncoder: GPUCommandEncoder) {
     this.prepareScene(renderables, camera);
 
-    // renderPass holds the draw commands allocated by command encoder
-    const renderPass: GPURenderPassEncoder = commandEncoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: this.frameBuffer.view,
-          // clearValue: { r: 0.5, g: 0.1, b: 0.25, a: 1.0 },
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      depthStencilAttachment: this.depthStencilAttachment,
-    });
+    const renderPass = this.frameBuffer.renderTo(commandEncoder);
 
     // draw sky first
     renderPass.setPipeline(this.pipelines[pipelineTypes.SKY] as GPURenderPipeline);
@@ -503,7 +521,19 @@ export class Renderer {
     renderPass.end();
   }
 
-  async applyPostProcessing(commandEncoder: GPUCommandEncoder) {
+  drawGun(commandEncoder: GPUCommandEncoder) {
+    const renderPass = this.gunFrameBuffer.renderTo(commandEncoder);
+
+    renderPass.setPipeline(this.pipelines[pipelineTypes.GUN]!);
+    renderPass.setBindGroup(0, this.frameBindGroups[pipelineTypes.GUN]);
+    renderPass.setBindGroup(1, this.gunMaterial.bindGroup);
+    renderPass.setVertexBuffer(0, this.gunMesh.buffer);
+    renderPass.draw(this.gunMesh.vertexCount, 1, 0, 0);
+
+    renderPass.end();
+  }
+
+  async drawScreen(commandEncoder: GPUCommandEncoder) {
     const textureView: GPUTextureView = this.context.getCurrentTexture().createView();
     const renderPass: GPURenderPassEncoder = commandEncoder.beginRenderPass({
       colorAttachments: [
@@ -515,9 +545,15 @@ export class Renderer {
       ],
     });
 
+    // World
     renderPass.setPipeline(this.pipelines[pipelineTypes.POST] as GPURenderPipeline);
     // renderPass.setBindGroup(0, this.frameBindGroups[pipelineTypes.POST]);
-    renderPass.setBindGroup(0, this.frameBuffer.bindGroup);
+    this.frameBuffer.readFrom(renderPass, 0);
+    renderPass.draw(6, 1, 0, 0);  // TODO: check vertexCount passed here
+
+    // Gun
+    renderPass.setPipeline(this.pipelines[pipelineTypes.POST] as GPURenderPipeline);
+    this.gunFrameBuffer.readFrom(renderPass, 0);
     renderPass.draw(6, 1, 0, 0);  // TODO: check vertexCount passed here
 
     renderPass.end();

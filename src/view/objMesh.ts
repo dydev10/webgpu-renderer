@@ -8,24 +8,25 @@ export class ObjMesh {
   vn: vec3[];
   vertices!: Float32Array;
   vertexCount!: number;
+  attributes: GPUVertexAttribute[];
 
   constructor() {
     this.v = [];
     this.vt = [];
     this.vn = [];
 
+    this.attributes = [];
   }
 
   async initialize(device: GPUDevice, url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
     // x y z u v nx ny nz
     await this.readFile(url, vEnabled, vtEnabled, vnEnabled);
 
-    const attributes: GPUVertexAttribute[] = [];
     let floatsPerVertex = 0;
     let attributesPerVertex = 0;
 
     if (vEnabled) {
-      attributes.push({
+      this.attributes.push({
         shaderLocation: attributesPerVertex,
         format: 'float32x3',
         offset: floatsPerVertex * 4,
@@ -35,7 +36,7 @@ export class ObjMesh {
     }
 
     if (vtEnabled) {
-      attributes.push({
+      this.attributes.push({
         shaderLocation: attributesPerVertex,
         format: 'float32x2',
         offset: floatsPerVertex * 4,
@@ -45,7 +46,7 @@ export class ObjMesh {
     }
 
     if (vnEnabled) {
-      attributes.push({
+      this.attributes.push({
         shaderLocation: attributesPerVertex,
         format: 'float32x3',
         offset: floatsPerVertex * 4,
@@ -70,19 +71,8 @@ export class ObjMesh {
     this.buffer.unmap();
 
     this.bufferLayout = {
-      arrayStride: 20,
-      attributes: [
-        {
-          shaderLocation: 0,
-          format: 'float32x3',
-          offset: 0,
-        },
-        {
-          shaderLocation: 1,
-          format: 'float32x2',
-          offset: 12,
-        },
-      ], 
+      arrayStride: floatsPerVertex * 4,
+      attributes: this.attributes, 
     };
   }
 
