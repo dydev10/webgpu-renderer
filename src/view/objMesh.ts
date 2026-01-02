@@ -16,10 +16,45 @@ export class ObjMesh {
 
   }
 
-  async initialize(device: GPUDevice, url: string) {
-    // x y r u v
-    await this.readFile(url);
-    this.vertexCount = this.vertices.length / 5;
+  async initialize(device: GPUDevice, url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
+    // x y z u v nx ny nz
+    await this.readFile(url, vEnabled, vtEnabled, vnEnabled);
+
+    const attributes: GPUVertexAttribute[] = [];
+    let floatsPerVertex = 0;
+    let attributesPerVertex = 0;
+
+    if (vEnabled) {
+      attributes.push({
+        shaderLocation: attributesPerVertex,
+        format: 'float32x3',
+        offset: floatsPerVertex * 4,
+      });
+      attributesPerVertex += 1;
+      floatsPerVertex += 3;
+    }
+
+    if (vtEnabled) {
+      attributes.push({
+        shaderLocation: attributesPerVertex,
+        format: 'float32x2',
+        offset: floatsPerVertex * 4,
+      });
+      attributesPerVertex += 1;
+      floatsPerVertex += 2;
+    }
+
+    if (vnEnabled) {
+      attributes.push({
+        shaderLocation: attributesPerVertex,
+        format: 'float32x3',
+        offset: floatsPerVertex * 4,
+      });
+      attributesPerVertex += 1;
+      floatsPerVertex += 3;
+    }
+
+    this.vertexCount = this.vertices.length / floatsPerVertex;
 
     const usage: GPUBufferUsageFlags = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST;
 
@@ -51,7 +86,7 @@ export class ObjMesh {
     };
   }
 
-  async readFile(url: string) {
+  async readFile(url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
     const result: number[] = []; 
 
     // Fetch OBJ model
@@ -71,7 +106,7 @@ export class ObjMesh {
         this.readNormalLine(line);
       }
       else if(line[0] === 'f' && line[1] === ' ') {
-        this.readFaceLine(line, result);
+        this.readFaceLine(line, result, vEnabled, vtEnabled, vnEnabled);
       }
     });
 
@@ -113,7 +148,7 @@ export class ObjMesh {
     this.vn.push(newNormal);
   }
 
-  readFaceLine(line: string, result: number[]) {
+  readFaceLine(line: string, result: number[], vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
     line.replace('\n', '');
     // ['f', v1, v2, ..]
     const vertexDescription = line.split(' ');
@@ -121,22 +156,34 @@ export class ObjMesh {
     const triangleCount = vertexDescription.length - 3;
 
     for (let i = 0; i < triangleCount; i++) {
-      this.readCorner(vertexDescription[1], result);
-      this.readCorner(vertexDescription[2 + i], result);
-      this.readCorner(vertexDescription[3 + i], result);
+      this.readCorner(vertexDescription[1], result, vEnabled, vtEnabled, vnEnabled);
+      this.readCorner(vertexDescription[2 + i], result, vEnabled, vtEnabled, vnEnabled);
+      this.readCorner(vertexDescription[3 + i], result, vEnabled, vtEnabled, vnEnabled);
     }
   }
 
-  readCorner(vertexDescription: string, result: number[]) {
+  readCorner(vertexDescription: string, result: number[], vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
     const v_vt_vn = vertexDescription.split('/');
     const v = this.v[Number(v_vt_vn[0]).valueOf() - 1];
     const vt = this.vt[Number(v_vt_vn[1]).valueOf() - 1];
-    // const vn = this.vn[Number(v_vt_vn[2]).valueOf() - 1];
+    const vn = this.vn[Number(v_vt_vn[2]).valueOf() - 1];
   
-    result.push(v[0]);
-    result.push(v[1]);
-    result.push(v[2]);
-    result.push(vt[0]);
-    result.push(vt[1]);
+
+    if (vEnabled) {
+      result.push(v[0]);
+      result.push(v[1]);
+      result.push(v[2]);
+    }
+
+    if (vtEnabled) {
+      result.push(vt[0]);
+      result.push(vt[1]);
+    }
+
+    if (vnEnabled) {
+      result.push(vn[0]);
+      result.push(vn[1]);
+      result.push(vn[2]);
+    }
   }
 }

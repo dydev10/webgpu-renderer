@@ -175,7 +175,7 @@ export class Renderer {
     this.frameBuffer = new FrameBuffer();
     
     this.statueMesh = new ObjMesh();
-    this.statueMesh.initialize(this.device, '/model/ground.obj');
+    this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false);
 
     this.uniformBuffer = this.device.createBuffer({
       size: 64 * 3,
