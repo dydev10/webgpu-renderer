@@ -1,4 +1,4 @@
-import { vec2, vec3 } from "gl-matrix";
+import { vec2, vec3, vec4, mat4 } from "gl-matrix";
 
 export class ObjMesh {
   buffer!: GPUBuffer;
@@ -18,9 +18,9 @@ export class ObjMesh {
     this.attributes = [];
   }
 
-  async initialize(device: GPUDevice, url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
+  async initialize(device: GPUDevice, url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean, preTransform: mat4) {
     // x y z u v nx ny nz
-    await this.readFile(url, vEnabled, vtEnabled, vnEnabled);
+    await this.readFile(url, vEnabled, vtEnabled, vnEnabled, preTransform);
 
     let floatsPerVertex = 0;
     let attributesPerVertex = 0;
@@ -76,7 +76,7 @@ export class ObjMesh {
     };
   }
 
-  async readFile(url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {
+  async readFile(url: string, vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean, preTransform: mat4) {
     const result: number[] = []; 
 
     // Fetch OBJ model
@@ -87,13 +87,13 @@ export class ObjMesh {
 
     lines.forEach((line: string) => {
       if(line[0] === 'v' && line[1] === ' ') {
-        this.readVertexLine(line);
+        this.readVertexLine(line, preTransform);
       }
       else if(line[0] === 'v' && line[1] === 't') {
         this.readTexCoordLine(line);
       }
       else if(line[0] === 'v' && line[1] === 'n') {
-        this.readNormalLine(line);
+        this.readNormalLine(line, preTransform);
       }
       else if(line[0] === 'f' && line[1] === ' ') {
         this.readFaceLine(line, result, vEnabled, vtEnabled, vnEnabled);
@@ -103,16 +103,20 @@ export class ObjMesh {
     this.vertices = new Float32Array(result);
   }
 
-  readVertexLine(line: string) {
+  readVertexLine(line: string, preTransform: mat4) {
     // ['v', x, y, z]
     const component = line.split(' ');
-    const newVertex: vec3 = [
+    const newVertex: vec4 = [
       Number(component[1]).valueOf(),
       Number(component[2]).valueOf(),
       Number(component[3]).valueOf(),
+      1.0,
     ];
 
-    this.v.push(newVertex);
+    let v = vec4.create();
+    v = vec4.transformMat4(v, newVertex, preTransform);
+
+    this.v.push([v[0], v[1], v[2]]);
   }
 
   readTexCoordLine(line: string) {
@@ -126,16 +130,21 @@ export class ObjMesh {
     this.vt.push(newTexCoord);
   }
 
-  readNormalLine(line: string) {
+  readNormalLine(line: string, preTransform: mat4) {
     // ['vn', nx, ny, nz]
     const component = line.split(' ');
-    const newNormal: vec3 = [
+    const newNormal: vec4 = [
       Number(component[1]).valueOf(),
       Number(component[2]).valueOf(),
       Number(component[3]).valueOf(),
+      0.0,
     ];
 
-    this.vn.push(newNormal);
+    let v = vec4.create();
+    v = vec4.transformMat4(v, newNormal, preTransform);
+    v = vec4.normalize(v, v);
+
+    this.vn.push([v[0], v[1], v[2]]);
   }
 
   readFaceLine(line: string, result: number[], vEnabled: boolean, vtEnabled: boolean, vnEnabled: boolean) {

@@ -1,8 +1,8 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import shader from "./shaders/shaders.wgsl?raw";
 import skyShader from "./shaders/skyShader.wgsl?raw";
 import postShader from "./shaders/post.wgsl?raw";
-import gunShader from "./shaders/gunShader.wgsl?raw"
+import gunShader from "./shaders/gunShader.wgsl?raw";
 import { Material } from "./material";
 import { TriangleMesh } from "./triangleMesh";
 import { QuadMesh } from "./quadMesh";
@@ -11,6 +11,7 @@ import { ObjMesh } from "./objMesh";
 import { Camera } from "../model/camera";
 import { CubeMapMaterial } from "./cubeMapMaterial";
 import { FrameBuffer } from "./frameBuffer";
+import { degToRad } from "../model/mathHelpers";
 
 export class Renderer {
   canvas: HTMLCanvasElement;
@@ -186,8 +187,10 @@ export class Renderer {
     this.frameBuffer = new FrameBuffer('Scene Layer');
     this.gunFrameBuffer= new FrameBuffer('Gun Layer');
     
+    const preTransform = mat4.create(); // identity preTransform
+    
     this.statueMesh = new ObjMesh();
-    await this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false);
+    await this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false, preTransform);
 
     this.uniformBuffer = this.device.createBuffer({
       size: 64 * 3,
@@ -225,9 +228,26 @@ export class Renderer {
 
     // Gun Frame Buffer
     await this.gunFrameBuffer.init(this.device, this.canvas, this.materialGroupLayout, this.format, true);
+   
     
+    // Gun Pre Transform
+    let gunPreTransform = mat4.clone(preTransform);
+
+    let gunTranslate = mat4.create();
+    gunTranslate = mat4.fromTranslation(gunTranslate, vec3.fromValues(0.45, -1.0, -2.0));
+    gunPreTransform = mat4.multiply(gunPreTransform, gunPreTransform, gunTranslate);
+
+    let gunRotation = mat4.create();
+    gunRotation = mat4.fromYRotation(gunRotation, degToRad(180));
+    gunPreTransform = mat4.multiply(gunPreTransform, gunPreTransform, gunRotation);
+
+    let gunScale = mat4.create();
+    gunScale = mat4.fromScaling(gunScale, vec3.fromValues(0.25, 0.25, 0.25));
+    gunPreTransform = mat4.multiply(gunPreTransform, gunPreTransform, gunScale);
+
+    // Gun mesh and material
     this.gunMesh = new ObjMesh();
-    await this.gunMesh.initialize(this.device, '/model/gun.obj', true, true, true);
+    await this.gunMesh.initialize(this.device, '/model/gun.obj', true, true, true, gunPreTransform);
     this.gunMaterial = new Material();
     await this.gunMaterial.init(this.device, '/img/gun.png', this.materialGroupLayout);
   }
