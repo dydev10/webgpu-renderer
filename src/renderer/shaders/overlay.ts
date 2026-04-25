@@ -1,3 +1,4 @@
+export const overlayShader = /* wgsl */`
 struct TransformData {
   view: mat4x4<f32>,
   projection: mat4x4<f32>,
@@ -24,7 +25,6 @@ fn vs_main(
   output.Position = transformUBO.projection * vec4<f32>(vertexPosition, 1.0);
   output.TexCoord = vertexTexCoord;
   output.Normal = vertexNormal;
-
   return output;
 }
 
@@ -32,3 +32,4 @@ fn vs_main(
 fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
   return textureSample(myTexture, mySampler, TexCoord);
 }
+`;

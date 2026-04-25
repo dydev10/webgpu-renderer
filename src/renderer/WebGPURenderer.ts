@@ -1,7 +1,7 @@
-import shader     from '../view/shaders/shaders.wgsl?raw';
-import skyShader  from '../view/shaders/skyShader.wgsl?raw';
-import postShader from '../view/shaders/post.wgsl?raw';
-import gunShader  from '../view/shaders/gunShader.wgsl?raw';
+import { worldShader   } from './shaders/world';
+import { skyShader     } from './shaders/sky';
+import { postShader    } from './shaders/post';
+import { overlayShader } from './shaders/overlay';
 import { Scene }            from '../scene/Scene';
 import { StarterScene }     from '../scene/StarterScene';
 import { ResourceRegistry } from '../registry/ResourceRegistry';
@@ -181,12 +181,12 @@ export class WebGPURenderer {
     this.worldPipeline = this.device.createRenderPipeline({
       layout,
       vertex: {
-        module: this.device.createShaderModule({ code: shader }),
+        module: this.device.createShaderModule({ code: worldShader }),
         entryPoint: 'vs_main',
         buffers: [WORLD_VERTEX_LAYOUT],
       },
       fragment: {
-        module: this.device.createShaderModule({ code: shader }),
+        module: this.device.createShaderModule({ code: worldShader }),
         entryPoint: 'fs_main',
         targets: [{ format: this.format }],
       },
@@ -235,12 +235,12 @@ export class WebGPURenderer {
     this.overlayPipeline = this.device.createRenderPipeline({
       layout,
       vertex: {
-        module: this.device.createShaderModule({ code: gunShader }),
+        module: this.device.createShaderModule({ code: overlayShader }),
         entryPoint: 'vs_main',
         buffers: [OVERLAY_VERTEX_LAYOUT],
       },
       fragment: {
-        module: this.device.createShaderModule({ code: gunShader }),
+        module: this.device.createShaderModule({ code: overlayShader }),
         entryPoint: 'fs_main',
         targets: [{ format: this.format }],
       },

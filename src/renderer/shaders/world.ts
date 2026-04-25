@@ -1,3 +1,4 @@
+export const worldShader = /* wgsl */`
 struct TransformData {
   view: mat4x4<f32>,
   projection: mat4x4<f32>,
@@ -27,7 +28,6 @@ fn vs_main(
   var output: Fragment;
   output.Position = transformUBO.projection * transformUBO.view * objects.model[ID] * vec4<f32>(vertexPosition, 1.0);
   output.TexCoord = vertexTexCoord;
-
   return output;
 }
 
@@ -35,3 +35,4 @@ fn vs_main(
 fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
   return textureSample(myTexture, mySampler, TexCoord);
 }
+`;

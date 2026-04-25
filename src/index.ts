@@ -1,0 +1,14 @@
+export { WebGPURenderer }        from './renderer/WebGPURenderer';
+export { Scene }                 from './scene/Scene';
+export { StarterScene }          from './scene/StarterScene';
+export { Camera }                from './model/camera';
+export { Mesh }                  from './mesh/Mesh';
+export { Geometry }              from './geometry/Geometry';
+export { ObjGeometry }           from './geometry/ObjGeometry';
+export { TriangleGeometry }      from './geometry/TriangleGeometry';
+export { QuadGeometry }          from './geometry/QuadGeometry';
+export { Material }              from './material/Material';
+export { SkyboxMaterial }        from './material/SkyboxMaterial';
+export { FirstPersonController } from './controller/FirstPersonController';
+export type { GeometryHandle, MaterialHandle, SkyboxHandle } from './types/handles';
+export type { RendererConfig, SceneConfig, MeshLoadOptions } from './types/public';

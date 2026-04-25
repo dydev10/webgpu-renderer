@@ -1,7 +1,8 @@
+export const skyShader = /* wgsl */`
 struct Camera {
   forwards: vec3<f32>,
   right: vec3<f32>,
-  up: vec3<f32> 
+  up: vec3<f32>
 }
 
 @group(0) @binding(0) var<uniform> camera: Camera;
@@ -28,7 +29,6 @@ fn sky_vert_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput {
   output.Position = vec4<f32>(positions[VertexIndex], 1.0, 1.0);
   var x: f32 = positions[VertexIndex].x;
   var y: f32 = positions[VertexIndex].y;
-
   output.direction = normalize(camera.forwards + (x * camera.right) + (y * camera.up));
   return output;
 }
@@ -37,3 +37,4 @@ fn sky_vert_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput {
 fn sky_frag_main(@location(0) direction: vec3<f32>) -> @location(0) vec4<f32> {
   return textureSample(skyTexture, skySampler, direction);
 }
+`;
