@@ -12,7 +12,7 @@ export interface SceneConfig {
 }
 
 export interface MeshLoadOptions {
-  normals?:     boolean
-  texCoords?:   boolean
-  preTransform?: Float32Array
+  normals?:      boolean
+  texCoords?:    boolean
+  preTransform?: ArrayLike<number>
 }

@@ -4,10 +4,10 @@ import skyShader from "./shaders/skyShader.wgsl?raw";
 import postShader from "./shaders/post.wgsl?raw";
 import gunShader from "./shaders/gunShader.wgsl?raw";
 import { Material } from "./material";
-import { TriangleMesh } from "./triangleMesh";
-import { QuadMesh } from "./quadMesh";
+import { TriangleGeometry } from "../geometry/TriangleGeometry";
+import { QuadGeometry } from "../geometry/QuadGeometry";
+import { ObjGeometry } from "../geometry/ObjGeometry";
 import { objectTypes, pipelineTypes, RenderData } from "../model/definitions";
-import { ObjMesh } from "./objMesh";
 import { Camera } from "../model/camera";
 import { CubeMapMaterial } from "./cubeMapMaterial";
 import { FrameBuffer } from "./frameBuffer";
@@ -30,9 +30,9 @@ export class Renderer {
   materialGroupLayout!: GPUBindGroupLayout;
 
   // Assets
-  triangleMesh!: TriangleMesh;
-  quadMesh!: QuadMesh;
-  statueMesh!: ObjMesh;
+  triangleMesh!: TriangleGeometry;
+  quadMesh!: QuadGeometry;
+  statueMesh!: ObjGeometry;
   triangleMaterial!: Material;
   quadMaterial!: Material;
   statueMaterial!: Material;
@@ -41,7 +41,7 @@ export class Renderer {
   skyMaterial!: CubeMapMaterial;
   frameBuffer!: FrameBuffer;
   gunFrameBuffer!: FrameBuffer;
-  gunMesh!: ObjMesh;
+  gunMesh!: ObjGeometry;
   gunMaterial!: Material;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -180,18 +180,17 @@ export class Renderer {
   }
 
   async createAssets() {
-    this.triangleMesh = new TriangleMesh(this.device);
-    this.quadMesh = new QuadMesh(this.device);
+    this.triangleMesh = new TriangleGeometry(this.device);
+    this.quadMesh = new QuadGeometry(this.device);
     this.triangleMaterial = new Material();
     this.quadMaterial = new Material();
     this.skyMaterial = new CubeMapMaterial();
     this.frameBuffer = new FrameBuffer('Scene Layer');
     this.gunFrameBuffer= new FrameBuffer('Gun Layer');
-    
-    const preTransform = mat4.create(); // identity preTransform
-    
-    this.statueMesh = new ObjMesh();
-    await this.statueMesh.initialize(this.device, '/model/ground.obj', true, true, false, preTransform);
+
+    const preTransform = mat4.create();
+
+    this.statueMesh = await ObjGeometry.load(this.device, '/model/ground.obj', { preTransform });
 
     this.uniformBuffer = this.device.createBuffer({
       size: 64 * 3,
@@ -249,8 +248,7 @@ export class Renderer {
     gunPreTransform = mat4.multiply(gunPreTransform, gunPreTransform, gunScale);
 
     // Gun mesh and material
-    this.gunMesh = new ObjMesh();
-    await this.gunMesh.initialize(this.device, '/model/gun.obj', true, true, true, gunPreTransform);
+    this.gunMesh = await ObjGeometry.load(this.device, '/model/gun.obj', { normals: true, preTransform: gunPreTransform });
     this.gunMaterial = new Material();
     await this.gunMaterial.init(this.device, '/img/gun.png', this.materialGroupLayout);
   }
