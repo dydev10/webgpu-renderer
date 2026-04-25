@@ -35,6 +35,7 @@ export class Renderer {
   statueMesh!: ObjMesh;
   triangleMaterial!: Material;
   quadMaterial!: Material;
+  statueMaterial!: Material;
   objectBuffer!: GPUBuffer;
   parameterBuffer!: GPUBuffer;
   skyMaterial!: CubeMapMaterial;
@@ -210,7 +211,9 @@ export class Renderer {
     this.parameterBuffer = this.device.createBuffer(parameterBufferDescriptor);
 
     await this.triangleMaterial.init(this.device, '/img/synth.jpg', this.materialGroupLayout);
-    await this.quadMaterial.init(this.device, '/img/floor.png', this.materialGroupLayout);  
+    await this.quadMaterial.init(this.device, '/img/floor.png', this.materialGroupLayout);
+    this.statueMaterial = new Material();
+    await this.statueMaterial.init(this.device, '/img/synth.jpg', this.materialGroupLayout);
   
     // sky assets
     const urls = [
@@ -430,7 +433,7 @@ export class Renderer {
      * Model View Projection matrices
      */
     const projection = mat4.create();
-    mat4.perspective(projection, Math.PI / 4, 800 / 600, 0.1, 10);
+    mat4.perspective(projection, Math.PI / 4, this.canvas.width / this.canvas.height, 0.1, 10);
 
     const view = renderables.viewTransform;
 
@@ -445,7 +448,7 @@ export class Renderer {
     );
 
     const dy = Math.tan(Math.PI / 8);
-    const dx = dy * (800 / 600);
+    const dx = dy * (this.canvas.width / this.canvas.height);
 
     this.device.queue.writeBuffer(
       this.parameterBuffer,
@@ -528,7 +531,7 @@ export class Renderer {
 
 
     // Statue
-    renderPass.setBindGroup(1, this.triangleMaterial.bindGroup);
+    renderPass.setBindGroup(1, this.statueMaterial.bindGroup);
     renderPass.setVertexBuffer(0, this.statueMesh.buffer);
     renderPass.draw(
       this.statueMesh.vertexCount,
