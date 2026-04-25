@@ -1,11 +1,11 @@
-import { Scene } from "../model/scene";
+import { StarterScene } from "../scene/StarterScene";
 import { Renderer } from "../view/renderer";
 import { FirstPersonController } from "../controller/FirstPersonController";
 
 export class App {
   canvas: HTMLCanvasElement;
   renderer: Renderer;
-  scene: Scene;
+  scene: StarterScene;
   controller: FirstPersonController;
 
   keyLabel: HTMLElement;
@@ -15,7 +15,7 @@ export class App {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.renderer = new Renderer(this.canvas);
-    this.scene = new Scene();
+    this.scene = new StarterScene();
 
     this.keyLabel    = document.querySelector('#key-label')     as HTMLElement;
     this.mouseXLabel = document.querySelector('#mouse-x-label') as HTMLElement;
@@ -27,7 +27,7 @@ export class App {
       this.mouseYLabel.innerText = e.clientY.toString();
     });
 
-    this.controller = new FirstPersonController(this.canvas, this.scene.getPlayer());
+    this.controller = new FirstPersonController(this.canvas, this.scene.camera);
   }
 
   async init() {
