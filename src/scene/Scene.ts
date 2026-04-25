@@ -4,13 +4,14 @@ import type { SkyboxMaterial } from '../material/SkyboxMaterial';
 import type { Mesh } from '../mesh/Mesh';
 import type { SceneConfig } from '../types/public';
 import type { InternalRenderData } from '../types/internal';
-import type { RenderData } from '../model/definitions';
+import type { ResourceRegistry } from '../registry/ResourceRegistry';
 
 export abstract class Scene {
   camera!: Camera;
   skybox?: SkyboxMaterial;
   protected objectData: Float32Array;
   protected meshEntries: { mesh: Mesh; slot: number }[] = [];
+  protected registry?: ResourceRegistry;
   private nextSlot = 0;
 
   constructor(config?: SceneConfig) {
@@ -31,33 +32,34 @@ export abstract class Scene {
 
   abstract update(dt?: number): void;
 
-  onAttach(_renderer: unknown): Promise<void> {
-    return Promise.resolve();
+  async onAttach(renderer: unknown): Promise<void> {
+    this.registry = (renderer as { registry: ResourceRegistry }).registry;
   }
 
   onDetach(): void {}
 
-  getPlayer(): Camera {
-    return this.camera;
-  }
-
-  getRenderables(): RenderData {
-    return {
-      viewTransform: this.camera.getViewMatrix(),
-      modelTransforms: this.objectData,
-      objectCounts: {} as never,
-    };
-  }
-
   buildRenderData(aspect: number): InternalRenderData {
+    const worldCalls   = [];
+    const overlayCalls = [];
+
+    if (this.registry) {
+      for (const { mesh, slot } of this.meshEntries) {
+        const geometryId = this.registry.getOrRegister(mesh.geometry);
+        const materialId = this.registry.getOrRegister(mesh.material);
+        const call = { geometryId, materialId, instanceCount: 1, firstInstance: slot };
+        if (mesh.layer === 'overlay') overlayCalls.push(call);
+        else worldCalls.push(call);
+      }
+    }
+
     return {
-      viewMatrix:       new Float32Array(this.camera.getViewMatrix()        as unknown as ArrayLike<number>),
-      projectionMatrix: new Float32Array(this.camera.getProjectionMatrix(aspect) as unknown as ArrayLike<number>),
+      viewMatrix:       new Float32Array(this.camera.getViewMatrix()              as unknown as ArrayLike<number>),
+      projectionMatrix: new Float32Array(this.camera.getProjectionMatrix(aspect)  as unknown as ArrayLike<number>),
       skyParams:        this.camera.getSkyParams(aspect),
       modelTransforms:  this.objectData,
-      worldCalls:       [],
-      overlayCalls:     [],
-      skyboxId:         undefined,
+      worldCalls,
+      overlayCalls,
+      skyboxId: this.skybox && this.registry ? this.registry.getOrRegister(this.skybox) : undefined,
     };
   }
 
