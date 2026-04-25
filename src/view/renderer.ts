@@ -432,9 +432,8 @@ export class Renderer {
     /**
      * Model View Projection matrices
      */
-    const projection = mat4.create();
-    mat4.perspective(projection, Math.PI / 4, this.canvas.width / this.canvas.height, 0.1, 10);
-
+    const aspect = this.canvas.width / this.canvas.height;
+    const projection = camera.getProjectionMatrix(aspect);
     const view = renderables.viewTransform;
 
     this.device.queue.writeBuffer(this.uniformBuffer, 0, view as ArrayBuffer);
@@ -447,31 +446,8 @@ export class Renderer {
       renderables.modelTransforms.length
     );
 
-    const dy = Math.tan(Math.PI / 8);
-    const dx = dy * (this.canvas.width / this.canvas.height);
-
-    this.device.queue.writeBuffer(
-      this.parameterBuffer,
-      0,
-      new Float32Array(
-        [
-          camera.forwards[0],
-          camera.forwards[1],
-          camera.forwards[2],
-          0,
-          dx * camera.right[0],
-          dx * camera.right[1],
-          dx * camera.right[2],
-          0,
-          dy * camera.up[0],
-          dy * camera.up[1],
-          dy * camera.up[2],
-          0,
-        ]
-      ),
-      0,
-      12
-    );
+    const skyParams = camera.getSkyParams(aspect);
+    this.device.queue.writeBuffer(this.parameterBuffer, 0, skyParams, 0, 12);
   }
 
   async render(renderables: RenderData, camera: Camera) {

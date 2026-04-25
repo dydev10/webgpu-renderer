@@ -10,6 +10,10 @@ export class Camera {
   right: vec3;
   up: vec3;
 
+  fov:  number = Math.PI / 4;
+  near: number = 0.1;
+  far:  number = 100;
+
   constructor(position: vec3, theta: number, phi: number,) {
     this.position = position;
     this.eulers = [0, phi, theta];
@@ -36,5 +40,25 @@ export class Camera {
 
   getView(): mat4 {
     return this.view;
+  }
+
+  getViewMatrix(): mat4 {
+    return this.view;
+  }
+
+  getProjectionMatrix(aspect: number): mat4 {
+    const out = mat4.create();
+    mat4.perspective(out, this.fov, aspect, this.near, this.far);
+    return out;
+  }
+
+  getSkyParams(aspect: number): Float32Array {
+    const dy = Math.tan(this.fov / 2);
+    const dx = dy * aspect;
+    return new Float32Array([
+      this.forwards[0], this.forwards[1], this.forwards[2], 0,
+      dx * this.right[0], dx * this.right[1], dx * this.right[2], 0,
+      dy * this.up[0], dy * this.up[1], dy * this.up[2], 0,
+    ]);
   }
 }
