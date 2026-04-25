@@ -3,13 +3,13 @@ import shader from "./shaders/shaders.wgsl?raw";
 import skyShader from "./shaders/skyShader.wgsl?raw";
 import postShader from "./shaders/post.wgsl?raw";
 import gunShader from "./shaders/gunShader.wgsl?raw";
-import { Material } from "./material";
+import { Material } from "../material/Material";
+import { SkyboxMaterial } from "../material/SkyboxMaterial";
 import { TriangleGeometry } from "../geometry/TriangleGeometry";
 import { QuadGeometry } from "../geometry/QuadGeometry";
 import { ObjGeometry } from "../geometry/ObjGeometry";
 import { objectTypes, pipelineTypes, RenderData } from "../model/definitions";
 import { Camera } from "../model/camera";
-import { CubeMapMaterial } from "./cubeMapMaterial";
 import { FrameBuffer } from "./frameBuffer";
 import { degToRad } from "../model/mathHelpers";
 
@@ -38,7 +38,7 @@ export class Renderer {
   statueMaterial!: Material;
   objectBuffer!: GPUBuffer;
   parameterBuffer!: GPUBuffer;
-  skyMaterial!: CubeMapMaterial;
+  skyMaterial!: SkyboxMaterial;
   frameBuffer!: FrameBuffer;
   gunFrameBuffer!: FrameBuffer;
   gunMesh!: ObjGeometry;
@@ -182,11 +182,8 @@ export class Renderer {
   async createAssets() {
     this.triangleMesh = new TriangleGeometry(this.device);
     this.quadMesh = new QuadGeometry(this.device);
-    this.triangleMaterial = new Material();
-    this.quadMaterial = new Material();
-    this.skyMaterial = new CubeMapMaterial();
     this.frameBuffer = new FrameBuffer('Scene Layer');
-    this.gunFrameBuffer= new FrameBuffer('Gun Layer');
+    this.gunFrameBuffer = new FrameBuffer('Gun Layer');
 
     const preTransform = mat4.create();
 
@@ -202,36 +199,32 @@ export class Renderer {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     };
     this.objectBuffer = this.device.createBuffer(modelBufferDescriptor);
-    
+
     const parameterBufferDescriptor: GPUBufferDescriptor = {
       size: 48,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     };
     this.parameterBuffer = this.device.createBuffer(parameterBufferDescriptor);
 
-    await this.triangleMaterial.init(this.device, '/img/synth.jpg', this.materialGroupLayout);
-    await this.quadMaterial.init(this.device, '/img/floor.png', this.materialGroupLayout);
-    this.statueMaterial = new Material();
-    await this.statueMaterial.init(this.device, '/img/synth.jpg', this.materialGroupLayout);
-  
-    // sky assets
-    const urls = [
-      '/img/sky_back.png',    // x+
-      '/img/sky_front.png',   // x-
-      '/img/sky_left.png',    // y+
-      '/img/sky_right.png',   // y-
-      '/img/sky_top.png',     // z+
-      '/img/sky_bottom.png',  // z-
-    ];
-    await this.skyMaterial.initialize(this.device, urls);
+    this.triangleMaterial = await Material.fromURL(this.device, '/img/synth.jpg');
+    this.quadMaterial     = await Material.fromURL(this.device, '/img/floor.png');
+    this.statueMaterial   = await Material.fromURL(this.device, '/img/synth.jpg');
+
+    this.skyMaterial = await SkyboxMaterial.fromURLs(this.device, [
+      '/img/sky_back.png',
+      '/img/sky_front.png',
+      '/img/sky_left.png',
+      '/img/sky_right.png',
+      '/img/sky_top.png',
+      '/img/sky_bottom.png',
+    ]);
 
     // Screen Frame Buffer
     await this.frameBuffer.init(this.device, this.canvas, this.materialGroupLayout, this.format, true);
 
     // Gun Frame Buffer
     await this.gunFrameBuffer.init(this.device, this.canvas, this.materialGroupLayout, this.format, true);
-   
-    
+
     // Gun Pre Transform
     let gunPreTransform = mat4.clone(preTransform);
 
@@ -247,10 +240,8 @@ export class Renderer {
     gunScale = mat4.fromScaling(gunScale, vec3.fromValues(0.25, 0.25, 0.25));
     gunPreTransform = mat4.multiply(gunPreTransform, gunPreTransform, gunScale);
 
-    // Gun mesh and material
-    this.gunMesh = await ObjGeometry.load(this.device, '/model/gun.obj', { normals: true, preTransform: gunPreTransform });
-    this.gunMaterial = new Material();
-    await this.gunMaterial.init(this.device, '/img/gun.png', this.materialGroupLayout);
+    this.gunMesh     = await ObjGeometry.load(this.device, '/model/gun.obj', { normals: true, preTransform: gunPreTransform });
+    this.gunMaterial = await Material.fromURL(this.device, '/img/gun.png');
   }
 
   async makePipeline() {
