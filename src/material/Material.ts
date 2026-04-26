@@ -1,4 +1,5 @@
 export class Material {
+  readonly kind = 'texture' as const;
   readonly bindGroup: GPUBindGroup;
   private readonly texture: GPUTexture;
 

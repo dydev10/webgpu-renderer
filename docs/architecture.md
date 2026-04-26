@@ -10,7 +10,7 @@ requestAnimationFrame fires
   scene.buildRenderData(aspect)     -> InternalRenderData
   renderer.writeBuffers(renderData) -> uploads matrices and transforms to GPU
   encoder = createCommandEncoder()
-  drawWorld(encoder, renderData)    -> sky pass then world draw calls
+  drawWorld(encoder, renderData)    -> full-screen shader calls, sky pass, then world draw calls
   drawOverlay(encoder, renderData)  -> overlay draw calls (gun, HUD geometry)
   composite(encoder)                -> post pass blits both framebuffers to canvas
   device.queue.submit(encoder)
@@ -53,9 +53,12 @@ interface InternalRenderData {
   modelTransforms:  Float32Array   // 16 * maxObjects floats
   worldCalls:       DrawCall[]     // geometry and material handles, instance counts
   overlayCalls:     DrawCall[]
+  shaderCalls:      MaterialHandle[]  // full-screen materials; no geometry handle needed
   skyboxId?:        SkyboxHandle
 }
 ```
+
+Meshes with `geometry === null` are routed to `shaderCalls` by `buildRenderData`. The renderer draws them before the sky pass using their own pipeline, with no vertex buffer bound.
 
 This structure contains only plain numbers and typed arrays. No GPU object references cross this boundary, which means the entire object can be transferred or cloned across a `Worker` with `postMessage` without any architectural change.
 

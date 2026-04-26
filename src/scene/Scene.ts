@@ -44,11 +44,18 @@ export abstract class Scene {
   buildRenderData(aspect: number): InternalRenderData {
     const worldCalls   = [];
     const overlayCalls = [];
+    const shaderCalls  = [];
 
     if (this.registry) {
       for (const { mesh, slot } of this.meshEntries) {
-        const geometryId = this.registry.getOrRegister(mesh.geometry);
         const materialId = this.registry.getOrRegister(mesh.material);
+
+        if (mesh.geometry === null) {
+          shaderCalls.push(materialId);
+          continue;
+        }
+
+        const geometryId = this.registry.getOrRegister(mesh.geometry);
         const call = { geometryId, materialId, instanceCount: 1, firstInstance: slot };
         if (mesh.layer === 'overlay') overlayCalls.push(call);
         else worldCalls.push(call);
@@ -62,6 +69,7 @@ export abstract class Scene {
       modelTransforms:  this.objectData,
       worldCalls,
       overlayCalls,
+      shaderCalls,
       skyboxId: this.skybox && this.registry ? this.registry.getOrRegister(this.skybox) : undefined,
     };
   }

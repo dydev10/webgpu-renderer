@@ -9,6 +9,7 @@ class WebGPURenderer {
   readonly canvas:   HTMLCanvasElement
   readonly registry: ResourceRegistry
   device:            GPUDevice           // available after initialize()
+  format:            GPUTextureFormat    // set to navigator.gpu.getPreferredCanvasFormat() during initialize()
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig)
 
@@ -118,12 +119,12 @@ Pairs a geometry and a material with a transform and a render layer.
 type RenderLayer = 'world' | 'overlay'
 
 class Mesh {
-  readonly geometry:  Geometry
-  readonly material:  Material
-  readonly transform: mat4         // identity on construction; mutate directly
-  readonly layer:     RenderLayer  // default 'world'
+  readonly geometry:  Geometry | null  // null when used with FullScreenMaterial
+  readonly material:  AnyMaterial
+  readonly transform: mat4             // identity on construction; mutate directly
+  readonly layer:     RenderLayer      // default 'world'
 
-  constructor(geometry: Geometry, material: Material, layer?: RenderLayer)
+  constructor(geometry: Geometry | null, material: AnyMaterial, layer?: RenderLayer)
 }
 ```
 
@@ -192,12 +193,26 @@ class QuadGeometry extends Geometry {
 
 ---
 
+## AnyMaterial
+
+Interface satisfied by all material types. The registry and `Mesh` accept any object that implements it.
+
+```ts
+interface AnyMaterial {
+  readonly kind:      string
+  readonly bindGroup: GPUBindGroup
+}
+```
+
+---
+
 ## Material
 
 A 2D texture material. Creates a GPU texture, view, sampler, and bind group from a URL or an existing `ImageBitmap`.
 
 ```ts
-class Material {
+class Material implements AnyMaterial {
+  readonly kind      = 'texture'
   readonly bindGroup: GPUBindGroup
 
   static fromURL(device: GPUDevice, url: string): Promise<Material>
@@ -228,6 +243,75 @@ class SkyboxMaterial {
 ```
 
 Assign to `scene.skybox` to enable sky rendering.
+
+---
+
+## FullScreenMaterial
+
+A material that renders a full-screen quad using a custom WGSL fragment shader. No geometry or vertex buffer is used. Pair with `new Mesh(null, mat)`.
+
+The library injects the vertex shader and a uniform struct preamble. The fragment shader only needs to declare `fs_main`:
+
+```wgsl
+// Injected automatically:
+// struct ShaderUniforms { time: f32, _pad: f32, resolution: vec2<f32> }
+// @group(0) @binding(0) var<uniform> u: ShaderUniforms;
+
+@fragment
+fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
+  let uv = fragCoord.xy / u.resolution;
+  return vec4<f32>(uv, sin(u.time * 0.001), 1.0);
+}
+```
+
+```ts
+class FullScreenMaterial implements AnyMaterial {
+  readonly kind      = 'fullscreen'
+  readonly bindGroup: GPUBindGroup
+  readonly pipeline:  GPURenderPipeline
+
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): FullScreenMaterial
+
+  tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
+  destroy(): void
+}
+```
+
+`FullScreenMaterial` is drawn before the sky pass so a skybox renders on top of it. Call `tick` each frame to keep `u.time` and `u.resolution` up to date.
+
+---
+
+## MeshShaderMaterial
+
+A material that applies a custom WGSL fragment shader to any world-layer geometry. Uses the same vertex pipeline as `Material` (20-byte layout: position + texcoord), so it works with `TriangleGeometry`, `QuadGeometry`, and `ObjGeometry`.
+
+The library injects the vertex shader (identical to the world pipeline's) and a uniform struct preamble at `@group(1)`. The fragment shader receives UV coordinates from the vertex stage:
+
+```wgsl
+// Injected automatically:
+// struct ShaderUniforms { time: f32, _pad: f32, resolution: vec2<f32> }
+// @group(1) @binding(0) var<uniform> u: ShaderUniforms;
+
+@fragment
+fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
+  return vec4<f32>(TexCoord, sin(u.time * 0.001), 1.0);
+}
+```
+
+```ts
+class MeshShaderMaterial implements AnyMaterial {
+  readonly kind      = 'mesh-shader'
+  readonly bindGroup: GPUBindGroup
+  readonly pipeline:  GPURenderPipeline
+
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): MeshShaderMaterial
+
+  tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
+  destroy(): void
+}
+```
+
+Only works with world-layer meshes (20-byte vertex layout). Not compatible with the overlay pipeline.
 
 ---
 

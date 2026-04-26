@@ -2,10 +2,12 @@ import { worldShader   } from './shaders/world';
 import { skyShader     } from './shaders/sky';
 import { postShader    } from './shaders/post';
 import { overlayShader } from './shaders/overlay';
-import { Scene }            from '../scene/Scene';
-import { StarterScene }     from '../scene/StarterScene';
-import { ResourceRegistry } from '../registry/ResourceRegistry';
-import { FrameBuffer }      from './FrameBuffer';
+import { Scene }              from '../scene/Scene';
+import { StarterScene }       from '../scene/StarterScene';
+import { ResourceRegistry }   from '../registry/ResourceRegistry';
+import { FrameBuffer }        from './FrameBuffer';
+import { FullScreenMaterial } from '../material/FullScreenMaterial';
+import { MeshShaderMaterial } from '../material/MeshShaderMaterial';
 import type { InternalRenderData } from '../types/internal';
 import type { RendererConfig }     from '../types/public';
 
@@ -32,7 +34,7 @@ export class WebGPURenderer {
   device!: GPUDevice;
 
   private context!: GPUCanvasContext;
-  private format!: GPUTextureFormat;
+  format!: GPUTextureFormat;
   private scene: Scene;
 
   private worldFrameLayout!: GPUBindGroupLayout;
@@ -53,7 +55,7 @@ export class WebGPURenderer {
   private overlayFrameBuffer!: FrameBuffer;
 
   private worldFrameBindGroup!: GPUBindGroup;
-  private skyBindGroup!: GPUBindGroup;
+  private skyBindGroup?: GPUBindGroup;
   private overlayBindGroup!: GPUBindGroup;
 
   private running = false;
@@ -148,7 +150,7 @@ export class WebGPURenderer {
     const adapter = await navigator.gpu?.requestAdapter() as GPUAdapter;
     this.device = await adapter?.requestDevice() as GPUDevice;
     this.context = this.canvas.getContext('webgpu') as GPUCanvasContext;
-    this.format = 'bgra8unorm';
+    this.format = navigator.gpu.getPreferredCanvasFormat();
     this.context.configure({ device: this.device, format: this.format, alphaMode: 'opaque' });
   }
 
@@ -302,7 +304,10 @@ export class WebGPURenderer {
 
   private makeSkyBindGroup() {
     const sky = this.scene.skybox;
-    if (!sky) return;
+    if (!sky) {
+      this.skyBindGroup = undefined;
+      return;
+    }
     this.skyBindGroup = this.device.createBindGroup({
       layout: this.skyLayout,
       entries: [
@@ -323,20 +328,45 @@ export class WebGPURenderer {
   private drawWorld(encoder: GPUCommandEncoder, renderData: InternalRenderData) {
     const pass = this.worldFrameBuffer.renderTo(encoder);
 
+    // Full-screen shader materials drawn first, before sky, as background layer.
+    for (const matId of renderData.shaderCalls) {
+      const mat = this.registry.getMaterial(matId);
+      if (!(mat instanceof FullScreenMaterial)) continue;
+      pass.setPipeline(mat.pipeline);
+      pass.setBindGroup(0, mat.bindGroup);
+      pass.draw(6);
+    }
+
     if (this.skyBindGroup) {
       pass.setPipeline(this.skyPipeline);
       pass.setBindGroup(0, this.skyBindGroup);
       pass.draw(6);
     }
 
-    pass.setPipeline(this.worldPipeline);
-    pass.setBindGroup(0, this.worldFrameBindGroup);
+    // World mesh materials. Pipeline is only rebound when it changes.
+    let activePipeline: GPURenderPipeline | null = null;
 
     for (const call of renderData.worldCalls) {
       const geo = this.registry.getGeometry(call.geometryId);
       const mat = this.registry.getMaterial(call.materialId);
       if (!geo || !mat) continue;
-      pass.setBindGroup(1, mat.bindGroup);
+
+      if (mat instanceof MeshShaderMaterial) {
+        if (activePipeline !== mat.pipeline) {
+          pass.setPipeline(mat.pipeline);
+          pass.setBindGroup(0, this.worldFrameBindGroup);
+          activePipeline = mat.pipeline;
+        }
+        pass.setBindGroup(1, mat.bindGroup);
+      } else {
+        if (activePipeline !== this.worldPipeline) {
+          pass.setPipeline(this.worldPipeline);
+          pass.setBindGroup(0, this.worldFrameBindGroup);
+          activePipeline = this.worldPipeline;
+        }
+        pass.setBindGroup(1, mat.bindGroup);
+      }
+
       pass.setVertexBuffer(0, geo.buffer);
       pass.draw(geo.vertexCount, call.instanceCount, 0, call.firstInstance);
     }

@@ -1,3 +1,8 @@
+export interface AnyMaterial {
+  readonly kind: string
+  readonly bindGroup: GPUBindGroup
+}
+
 export interface RendererConfig {
   scene?: unknown | null
   powerPreference?: GPUPowerPreference

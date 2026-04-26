@@ -133,6 +133,7 @@ export class StarterScene extends Scene {
       overlayCalls: [
         { geometryId: gunGeoId, materialId: gunMatId, instanceCount: 1, firstInstance: 0 },
       ],
+      shaderCalls: [],
       skyboxId,
     };
   }

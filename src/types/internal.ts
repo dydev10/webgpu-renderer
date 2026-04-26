@@ -14,5 +14,6 @@ export interface InternalRenderData {
   modelTransforms:  Float32Array
   worldCalls:       DrawCall[]
   overlayCalls:     DrawCall[]
+  shaderCalls:      MaterialHandle[]
   skyboxId?:        SkyboxHandle
 }
