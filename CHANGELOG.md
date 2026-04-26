@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0] - 2026-04-27
+
+### Added
+
+- `FullScreenMaterial` -- full-screen shader material driven by a user-supplied WGSL fragment shader. Receives pixel coordinates via `@builtin(position)` and a uniform struct (`time`, `resolution`) at `@group(0) @binding(0)`. Add to a scene with `new Mesh(null, mat)`.
+- `MeshShaderMaterial` -- per-mesh shader material driven by a user-supplied WGSL fragment shader. Receives interpolated UV coordinates via `@location(0) TexCoord` and a uniform struct (`time`, `resolution`) at `@group(1) @binding(0)`. Compatible with any world-layer `Mesh`.
+- `AnyMaterial` interface -- structural type (`kind: string`, `bindGroup: GPUBindGroup`) used wherever a material is accepted generically. Allows user-defined material types to be registered in the resource registry without importing concrete classes.
+- `Mesh` now accepts `geometry: Geometry | null`. A null geometry signals a full-screen pass; the mesh is routed to `shaderCalls` in `InternalRenderData` instead of `worldCalls`.
+- `WebGPURenderer.format` is now public. Scenes can read the preferred canvas format during `onAttach` to create compatible pipelines.
+- Canvas format is now determined by `navigator.gpu.getPreferredCanvasFormat()` instead of the hardcoded `'bgra8unorm'`.
+
+### Fixed
+
+- Switching to a scene without a skybox no longer leaves the previous scene's sky visible. `skyBindGroup` is now cleared when `makeSkyBindGroup` finds no skybox on the incoming scene.
+
 ## [0.2.0] - 2026-04-26
 
 ### Added
