@@ -13,24 +13,17 @@ export class FrameBuffer {
   depthStencilAttachment: GPURenderPassDepthStencilAttachment | null = null;
   colorAttachments: GPURenderPassColorAttachment[] = [];
 
+  private format!: GPUTextureFormat;
+  private depthEnabled = false;
+
   constructor(name: string) {
     this.name = name;
   }
 
   async init(device: GPUDevice, canvas: HTMLCanvasElement, format: GPUTextureFormat, depthEnabled: boolean) {
+    this.format = format;
+    this.depthEnabled = depthEnabled;
     const { width, height } = canvas;
-
-    this.texture = device.createTexture({
-      size: { width, height },
-      mipLevelCount: 1,
-      format,
-      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    this.view = this.texture.createView({
-      format, dimension: '2d', aspect: 'all',
-      baseMipLevel: 0, mipLevelCount: 1, baseArrayLayer: 0, arrayLayerCount: 1,
-    });
 
     this.sampler = device.createSampler({
       addressModeU: 'repeat', addressModeV: 'repeat',
@@ -45,15 +38,15 @@ export class FrameBuffer {
       ],
     });
 
-    this.bindGroup = device.createBindGroup({
-      layout: this.bindGroupLayout,
-      entries: [
-        { binding: 0, resource: this.view },
-        { binding: 1, resource: this.sampler },
-      ],
-    });
+    if (depthEnabled) {
+      this.depthStencilState = {
+        format: 'depth24plus-stencil8',
+        depthWriteEnabled: true,
+        depthCompare: 'less-equal',
+      };
+    }
 
-    if (depthEnabled) this.makeDepthBufferResources(device, canvas);
+    this.createResources(device, width, height);
 
     this.colorAttachments.push({
       view: this.view,
@@ -63,29 +56,50 @@ export class FrameBuffer {
     });
   }
 
-  private makeDepthBufferResources(device: GPUDevice, canvas: HTMLCanvasElement) {
-    this.depthStencilState = {
-      format: 'depth24plus-stencil8',
-      depthWriteEnabled: true,
-      depthCompare: 'less-equal',
-    };
+  resize(device: GPUDevice, width: number, height: number) {
+    this.texture.destroy();
+    if (this.depthStencilBuffer) this.depthStencilBuffer.destroy();
+    this.createResources(device, width, height);
+    this.colorAttachments[0] = { ...this.colorAttachments[0], view: this.view };
+  }
 
-    this.depthStencilBuffer = device.createTexture({
-      size: { width: canvas.width, height: canvas.height, depthOrArrayLayers: 1 },
-      format: 'depth24plus-stencil8',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  private createResources(device: GPUDevice, width: number, height: number) {
+    this.texture = device.createTexture({
+      size: { width, height },
+      mipLevelCount: 1,
+      format: this.format,
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    this.depthStencilView = this.depthStencilBuffer.createView({
-      format: 'depth24plus-stencil8', dimension: '2d', aspect: 'all',
+    this.view = this.texture.createView({
+      format: this.format, dimension: '2d', aspect: 'all',
+      baseMipLevel: 0, mipLevelCount: 1, baseArrayLayer: 0, arrayLayerCount: 1,
     });
 
-    this.depthStencilAttachment = {
-      view: this.depthStencilView,
-      depthClearValue: 1.0,
-      depthLoadOp: 'clear', depthStoreOp: 'store',
-      stencilLoadOp: 'clear', stencilStoreOp: 'discard',
-    };
+    this.bindGroup = device.createBindGroup({
+      layout: this.bindGroupLayout,
+      entries: [
+        { binding: 0, resource: this.view },
+        { binding: 1, resource: this.sampler },
+      ],
+    });
+
+    if (this.depthEnabled) {
+      this.depthStencilBuffer = device.createTexture({
+        size: { width, height, depthOrArrayLayers: 1 },
+        format: 'depth24plus-stencil8',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+      this.depthStencilView = this.depthStencilBuffer.createView({
+        format: 'depth24plus-stencil8', dimension: '2d', aspect: 'all',
+      });
+      this.depthStencilAttachment = {
+        view: this.depthStencilView,
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear', depthStoreOp: 'store',
+        stencilLoadOp: 'clear', stencilStoreOp: 'discard',
+      };
+    }
   }
 
   renderTo(encoder: GPUCommandEncoder): GPURenderPassEncoder {

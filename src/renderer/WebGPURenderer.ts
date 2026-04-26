@@ -59,6 +59,8 @@ export class WebGPURenderer {
   private running = false;
   private rafId = 0;
   private lastT = 0;
+  private framebufferWidth = 0;
+  private framebufferHeight = 0;
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig) {
     this.canvas = canvas;
@@ -89,6 +91,12 @@ export class WebGPURenderer {
   }
 
   renderFrame(dt?: number): void {
+    if (this.canvas.width !== this.framebufferWidth || this.canvas.height !== this.framebufferHeight) {
+      this.worldFrameBuffer.resize(this.device, this.canvas.width, this.canvas.height);
+      this.overlayFrameBuffer.resize(this.device, this.canvas.width, this.canvas.height);
+      this.framebufferWidth  = this.canvas.width;
+      this.framebufferHeight = this.canvas.height;
+    }
     this.scene.update(dt);
     const aspect = this.canvas.width / this.canvas.height;
     const renderData = this.scene.buildRenderData(aspect);
@@ -172,6 +180,9 @@ export class WebGPURenderer {
 
     this.overlayFrameBuffer = new FrameBuffer('Overlay');
     await this.overlayFrameBuffer.init(this.device, this.canvas, this.format, true);
+
+    this.framebufferWidth  = this.canvas.width;
+    this.framebufferHeight = this.canvas.height;
   }
 
   private makePipelines() {
