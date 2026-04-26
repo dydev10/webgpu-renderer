@@ -1,6 +1,6 @@
 {
   "name": "@dydev10/webgpu-renderer",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "WebGPU renderer for the browser with a scene API and two-pass composite pipeline.",
   "keywords": [
     "webgpu",
