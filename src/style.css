@@ -96,6 +96,13 @@ button:focus-visible {
 }
 
 
+.scene-controls {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
 .canvas-wrapper {
   resize: both;
   overflow: hidden;

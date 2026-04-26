@@ -1,4 +1,5 @@
-import { WebGPURenderer } from '../../src/index';
+import { WebGPURenderer, StarterScene } from '../../src/index';
+import { SculptureScene } from './SculptureScene';
 
 const outputLabel = document.querySelector('#compatibility-check') as HTMLElement;
 outputLabel.innerText = navigator.gpu ? 'WebGPU Enabled' : 'WebGPU Not Supported';
@@ -26,3 +27,11 @@ new ResizeObserver(entries => {
 const renderer = new WebGPURenderer(canvas);
 await renderer.initialize();
 renderer.start();
+
+document.querySelector('#btn-starter')?.addEventListener('click', () => {
+  renderer.setScene(new StarterScene());
+});
+
+document.querySelector('#btn-sculpture')?.addEventListener('click', () => {
+  renderer.setScene(new SculptureScene());
+});
