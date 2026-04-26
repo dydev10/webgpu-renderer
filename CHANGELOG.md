@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2] - 2026-04-27
+
+### Fixed
+
+- `new WebGPURenderer(canvas)` no longer instantiates `StarterScene` by default. The default is now an internal `EmptyScene` that renders a blank canvas and loads no assets. `StarterScene` must be passed explicitly via `config.scene`.
+- `new WebGPURenderer(canvas, { scene: null })` previously fell through to `StarterScene` due to `??` treating `null` as nullish. Both `null` and omitting `scene` now consistently produce a blank canvas.
+
 ## [0.3.1] - 2026-04-27
 
 ### Fixed
