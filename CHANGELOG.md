@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.1] - 2026-04-27
+
+### Fixed
+
+- `Scene.remove()` documentation corrected -- slots are reclaimed and reused, not abandoned.
+
+### Changed
+
+- README now includes `FullScreenMaterial` and `MeshShaderMaterial` in the API table.
+- README stability warning added: API may change before v1.0.
+
 ## [0.3.0] - 2026-04-27
 
 ### Added
