@@ -1,8 +1,14 @@
 {
   "name": "@dydev10/webgpu-renderer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "WebGPU renderer for the browser with a scene API and two-pass composite pipeline.",
-  "keywords": ["webgpu", "renderer", "3d", "graphics", "browser"],
+  "keywords": [
+    "webgpu",
+    "renderer",
+    "3d",
+    "graphics",
+    "browser"
+  ],
   "author": "DY Dev <dydev420@gmail.com>",
   "license": "MIT",
   "repository": {
