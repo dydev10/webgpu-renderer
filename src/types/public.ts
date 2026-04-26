@@ -14,5 +14,6 @@ export interface SceneConfig {
 export interface MeshLoadOptions {
   normals?:      boolean
   texCoords?:    boolean
+  flipV?:        boolean             // default true; set false if OBJ was exported with V already flipped
   preTransform?: ArrayLike<number>
 }

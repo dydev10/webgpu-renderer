@@ -29,11 +29,12 @@ export class ObjGeometry extends Geometry {
     const geo = new ObjGeometry();
     const vtEnabled = options?.texCoords ?? true;
     const vnEnabled = options?.normals ?? false;
+    const flipV     = options?.flipV ?? true;
     const preTransform = options?.preTransform
       ? new Float32Array(options.preTransform) as unknown as mat4
       : mat4.create();
 
-    await geo.readFile(url, vtEnabled, vnEnabled, preTransform);
+    await geo.readFile(url, vtEnabled, vnEnabled, flipV, preTransform);
 
     let floatsPerVertex = 0;
     let attributesPerVertex = 0;
@@ -73,7 +74,7 @@ export class ObjGeometry extends Geometry {
     return geo;
   }
 
-  private async readFile(url: string, vtEnabled: boolean, vnEnabled: boolean, preTransform: mat4) {
+  private async readFile(url: string, vtEnabled: boolean, vnEnabled: boolean, flipV: boolean, preTransform: mat4) {
     const result: number[] = [];
     const res = await fetch(url);
     const blob = await res.blob();
@@ -84,7 +85,7 @@ export class ObjGeometry extends Geometry {
       if (line[0] === 'v' && line[1] === ' ') {
         this.readVertexLine(line, preTransform);
       } else if (line[0] === 'v' && line[1] === 't') {
-        this.readTexCoordLine(line);
+        this.readTexCoordLine(line, flipV);
       } else if (line[0] === 'v' && line[1] === 'n') {
         this.readNormalLine(line, preTransform);
       } else if (line[0] === 'f' && line[1] === ' ') {
@@ -107,9 +108,10 @@ export class ObjGeometry extends Geometry {
     this.v.push([v[0], v[1], v[2]]);
   }
 
-  private readTexCoordLine(line: string) {
+  private readTexCoordLine(line: string, flipV: boolean) {
     const component = line.split(' ');
-    this.vt.push([Number(component[1]), Number(component[2])]);
+    const v = Number(component[2]);
+    this.vt.push([Number(component[1]), flipV ? 1.0 - v : v]);
   }
 
   private readNormalLine(line: string, preTransform: mat4) {

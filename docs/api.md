@@ -163,6 +163,7 @@ class ObjGeometry extends Geometry {
 interface MeshLoadOptions {
   normals?:      boolean            // default false
   texCoords?:    boolean            // default true
+  flipV?:        boolean            // default true; set false if OBJ was exported with V already flipped
   preTransform?: ArrayLike<number>  // mat4 applied to all vertices at load time
 }
 ```
