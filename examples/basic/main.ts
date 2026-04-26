@@ -1,6 +1,8 @@
 import { WebGPURenderer, StarterScene } from '../../src/index';
-import { SculptureScene } from './SculptureScene';
-import { SpawnScene } from './SpawnScene';
+import { SculptureScene }        from './SculptureScene';
+import { SpawnScene }            from './SpawnScene';
+import { FullScreenShaderScene } from './FullScreenShaderScene';
+import { MeshShaderScene }       from './MeshShaderScene';
 
 const outputLabel = document.querySelector('#compatibility-check') as HTMLElement;
 outputLabel.innerText = navigator.gpu ? 'WebGPU Enabled' : 'WebGPU Not Supported';
@@ -27,6 +29,14 @@ document.querySelector('#btn-starter')?.addEventListener('click', () => {
 
 document.querySelector('#btn-sculpture')?.addEventListener('click', () => {
   renderer.setScene(new SculptureScene());
+});
+
+document.querySelector('#btn-fullscreen-shader')?.addEventListener('click', () => {
+  renderer.setScene(new FullScreenShaderScene());
+});
+
+document.querySelector('#btn-mesh-shader')?.addEventListener('click', () => {
+  renderer.setScene(new MeshShaderScene());
 });
 
 const spawnStats    = document.querySelector('#spawn-stats')    as HTMLElement;

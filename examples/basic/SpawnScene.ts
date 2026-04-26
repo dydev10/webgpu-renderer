@@ -1,5 +1,14 @@
 import { mat4 } from 'gl-matrix';
-import { Scene, Camera, TriangleGeometry, Material, Mesh } from '../../src/index';
+import { Scene, Camera, TriangleGeometry, Material, Mesh, SkyboxMaterial } from '../../src/index';
+
+const SKY_URLS: [string, string, string, string, string, string] = [
+  '/img/sky_back.png',
+  '/img/sky_front.png',
+  '/img/sky_left.png',
+  '/img/sky_right.png',
+  '/img/sky_top.png',
+  '/img/sky_bottom.png',
+];
 
 const SPAWN_INTERVAL = 100;  // ms between spawns
 const LIFETIME       = 2000; // ms each mesh lives
@@ -29,7 +38,10 @@ export class SpawnScene extends Scene {
     await super.onAttach(renderer);
     const r = renderer as { device: GPUDevice };
     this.geo = new TriangleGeometry(r.device);
-    this.mat = await Material.fromURL(r.device, '/img/synth.jpg');
+    [this.mat, this.skybox] = await Promise.all([
+      Material.fromURL(r.device, '/img/synth.jpg'),
+      SkyboxMaterial.fromURLs(r.device, SKY_URLS),
+    ]);
   }
 
   update(dt = 16): void {
