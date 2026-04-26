@@ -26,7 +26,7 @@ class WebGPURenderer {
 
 ```ts
 interface RendererConfig {
-  scene?:           Scene | null              // null = raw mode, omit = StarterScene
+  scene?:           Scene | null              // omit or null = blank canvas
   powerPreference?: GPUPowerPreference
   onFrame?:         (dt: number) => void
   onError?:         (err: Error) => void
@@ -73,7 +73,9 @@ interface SceneConfig {
 
 ## StarterScene
 
-A ready-made scene shipped with the library. Contains a field of spinning triangles, a tiled floor, a rotating statue model, and a skybox. Creates a `FirstPersonController` bound to the renderer canvas during `onAttach`.
+An example scene included with the library. Contains a field of spinning triangles, a tiled floor, a rotating statue model, and a skybox. Creates a `FirstPersonController` bound to the renderer canvas during `onAttach`.
+
+Must be passed explicitly via `config.scene`. Requires asset files served from the consumer's dev server: `/img/synth.jpg`, `/img/floor.png`, `/img/gun.png`, `/img/sky_*.png` (6 faces), `/model/ground.obj`, `/model/gun.obj`.
 
 ```ts
 class StarterScene extends Scene {

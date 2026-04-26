@@ -16,9 +16,25 @@ npm install @dydev10/webgpu-renderer
 
 ---
 
+## TypeScript setup
+
+`@webgpu/types` is included as a dependency and installed automatically. You still need to tell TypeScript to load it. Add it to your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["@webgpu/types"]
+  }
+}
+```
+
+Without this, `navigator.gpu` and all WebGPU globals will appear as unknown types.
+
+---
+
 ## Usage
 
-**Zero config** -- starter scene, managed loop:
+**Zero config** -- blank canvas, managed loop:
 
 ```ts
 import { WebGPURenderer } from '@dydev10/webgpu-renderer';
@@ -53,10 +69,10 @@ await renderer.initialize();
 renderer.start();
 ```
 
-**Raw mode** -- manual loop:
+**Manual loop** -- drive the frame yourself:
 
 ```ts
-const renderer = new WebGPURenderer(canvas, { scene: null });
+const renderer = new WebGPURenderer(canvas, { scene: new MyScene() });
 await renderer.initialize();
 
 function frame() {
@@ -74,7 +90,7 @@ requestAnimationFrame(frame);
 |--------|-------------|
 | `WebGPURenderer` | Main class. Owns the GPU device, pipelines, and resource registry. Use `setScene()` to hot-swap scenes and `destroy()` to clean up. |
 | `Scene` | Abstract base class. Extend to build custom scenes. |
-| `StarterScene` | Built-in demo scene with geometry, skybox, and first-person controller. |
+| `StarterScene` | Built-in demo scene with geometry, skybox, and first-person controller. Requires specific asset files served from `/img/` and `/model/` -- pass explicitly via `config.scene`. |
 | `Camera` | Position and orientation. Computes view/projection matrices. |
 | `Mesh` | Pairs a geometry and material with a transform and render layer. |
 | `Geometry` | Abstract base for all geometry types. Call `destroy()` to free the GPU buffer. |

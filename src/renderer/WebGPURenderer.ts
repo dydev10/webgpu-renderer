@@ -3,7 +3,7 @@ import { skyShader     } from './shaders/sky';
 import { postShader    } from './shaders/post';
 import { overlayShader } from './shaders/overlay';
 import { Scene }              from '../scene/Scene';
-import { StarterScene }       from '../scene/StarterScene';
+import { EmptyScene }         from '../scene/EmptyScene';
 import { ResourceRegistry }   from '../registry/ResourceRegistry';
 import { FrameBuffer }        from './FrameBuffer';
 import { FullScreenMaterial } from '../material/FullScreenMaterial';
@@ -69,7 +69,7 @@ export class WebGPURenderer {
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig) {
     this.canvas = canvas;
     this.registry = new ResourceRegistry();
-    this.scene = (config?.scene as Scene | null | undefined) ?? new StarterScene();
+    this.scene = (config?.scene as Scene | null | undefined) ?? new EmptyScene();
     this.onResize = config?.onResize;
   }
 
