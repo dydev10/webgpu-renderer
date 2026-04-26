@@ -50,7 +50,7 @@ abstract class Scene {
   constructor(config?: SceneConfig)
 
   add(mesh: Mesh): Mesh        // registers a mesh and assigns it a transform slot
-  remove(mesh: Mesh): void     // removes a mesh (slot is not reused -- see architecture docs)
+  remove(mesh: Mesh): void     // removes a mesh and reclaims its transform slot for reuse
 
   abstract update(dt?: number): void
 

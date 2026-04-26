@@ -4,6 +4,8 @@ A WebGPU renderer for the browser with a scene API, instanced geometry, skybox, 
 
 Requires a browser with WebGPU support (Chrome 113+, Edge 113+).
 
+> **Warning:** This package is under active development and has not reached a stable 1.0 release. Expect breaking changes before v1.0.
+
 ---
 
 ## Installation
@@ -80,6 +82,8 @@ requestAnimationFrame(frame);
 | `TriangleGeometry` | Single equilateral triangle (position + texcoord). |
 | `QuadGeometry` | Unit quad (position + texcoord). |
 | `Material` | 2D texture. Created from a URL or `ImageBitmap`. Call `destroy()` to free the GPU texture. |
+| `FullScreenMaterial` | Full-screen shader material driven by a user-supplied WGSL fragment shader. Add with `new Mesh(null, mat)`. Call `destroy()` to free the uniform buffer. |
+| `MeshShaderMaterial` | Per-mesh shader material driven by a user-supplied WGSL fragment shader. Compatible with any world-layer mesh. Call `destroy()` to free the uniform buffer. |
 | `SkyboxMaterial` | Cube-map texture. Assign to `scene.skybox` to enable sky rendering. Call `destroy()` to free the GPU texture. |
 | `FirstPersonController` | WASD + mouse-look. Attach to a canvas and camera. |
 
