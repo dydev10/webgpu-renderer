@@ -1,7 +1,9 @@
 export class Material {
   readonly bindGroup: GPUBindGroup;
+  private readonly texture: GPUTexture;
 
-  private constructor(bindGroup: GPUBindGroup) {
+  private constructor(texture: GPUTexture, bindGroup: GPUBindGroup) {
+    this.texture = texture;
     this.bindGroup = bindGroup;
   }
 
@@ -59,6 +61,10 @@ export class Material {
       ],
     });
 
-    return new Material(bindGroup);
+    return new Material(texture, bindGroup);
+  }
+
+  destroy(): void {
+    this.texture.destroy();
   }
 }

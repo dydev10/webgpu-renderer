@@ -141,6 +141,8 @@ abstract class Geometry {
   abstract buffer:       GPUBuffer
   abstract vertexCount:  number
   abstract bufferLayout: GPUVertexBufferLayout
+
+  destroy(): void  // destroys the underlying GPUBuffer
 }
 ```
 
@@ -196,6 +198,8 @@ class Material {
 
   static fromURL(device: GPUDevice, url: string): Promise<Material>
   static fromBitmap(device: GPUDevice, bitmap: ImageBitmap): Promise<Material>
+
+  destroy(): void  // destroys the underlying GPU texture
 }
 ```
 
@@ -214,6 +218,8 @@ class SkyboxMaterial {
     device: GPUDevice,
     urls:   [string, string, string, string, string, string]
   ): Promise<SkyboxMaterial>
+
+  destroy(): void  // destroys the underlying GPU texture
 }
 ```
 
