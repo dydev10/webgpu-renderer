@@ -1,14 +1,8 @@
 export class Material {
   readonly bindGroup: GPUBindGroup;
-  private readonly texture: GPUTexture;
-  private readonly view: GPUTextureView;
-  private readonly sampler: GPUSampler;
 
-  private constructor(bindGroup: GPUBindGroup, texture: GPUTexture, view: GPUTextureView, sampler: GPUSampler) {
+  private constructor(bindGroup: GPUBindGroup) {
     this.bindGroup = bindGroup;
-    this.texture = texture;
-    this.view = view;
-    this.sampler = sampler;
   }
 
   static async fromURL(device: GPUDevice, url: string): Promise<Material> {
@@ -65,6 +59,6 @@ export class Material {
       ],
     });
 
-    return new Material(bindGroup, texture, view, sampler);
+    return new Material(bindGroup);
   }
 }

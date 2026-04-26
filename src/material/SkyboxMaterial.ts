@@ -1,10 +1,7 @@
 export class SkyboxMaterial {
   readonly view: GPUTextureView;
   readonly sampler: GPUSampler;
-  private readonly texture: GPUTexture;
-
-  private constructor(texture: GPUTexture, view: GPUTextureView, sampler: GPUSampler) {
-    this.texture = texture;
+  private constructor(view: GPUTextureView, sampler: GPUSampler) {
     this.view = view;
     this.sampler = sampler;
   }
@@ -55,6 +52,6 @@ export class SkyboxMaterial {
       maxAnisotropy: 1,
     });
 
-    return new SkyboxMaterial(texture, view, sampler);
+    return new SkyboxMaterial(view, sampler);
   }
 }
