@@ -61,11 +61,14 @@ export class WebGPURenderer {
   private lastT = 0;
   private framebufferWidth = 0;
   private framebufferHeight = 0;
+  private resizeObserver!: ResizeObserver;
+  private onResize?: (width: number, height: number) => void;
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig) {
     this.canvas = canvas;
     this.registry = new ResourceRegistry();
     this.scene = (config?.scene as Scene | null | undefined) ?? new StarterScene();
+    this.onResize = config?.onResize;
   }
 
   async initialize(): Promise<void> {
@@ -77,6 +80,7 @@ export class WebGPURenderer {
     this.makeBindGroups();
     await this.scene.onAttach(this);
     this.makeSkyBindGroup();
+    this.setupResizeObserver();
   }
 
   start(): void {
@@ -117,7 +121,19 @@ export class WebGPURenderer {
 
   destroy(): void {
     this.stop();
+    this.resizeObserver.disconnect();
     this.scene.onDetach();
+  }
+
+  private setupResizeObserver() {
+    this.resizeObserver = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      const dpr = window.devicePixelRatio;
+      this.canvas.width  = Math.round(width * dpr);
+      this.canvas.height = Math.round(height * dpr);
+      this.onResize?.(this.canvas.width, this.canvas.height);
+    });
+    this.resizeObserver.observe(this.canvas);
   }
 
   private loop = (t: number) => {
