@@ -1,5 +1,4 @@
 import { WebGPURenderer } from '../../src/index';
-import '../../src/style.css';
 
 const outputLabel = document.querySelector('#compatibility-check') as HTMLElement;
 outputLabel.innerText = navigator.gpu ? 'WebGPU Enabled' : 'WebGPU Not Supported';
@@ -15,6 +14,15 @@ document.addEventListener('mousemove', (e) => {
 });
 
 const canvas = document.querySelector('#gfx-main') as HTMLCanvasElement;
+const wrapper = canvas.parentElement!;
+
+new ResizeObserver(entries => {
+  const { width, height } = entries[0].contentRect;
+  const dpr = window.devicePixelRatio;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+}).observe(wrapper);
+
 const renderer = new WebGPURenderer(canvas);
 await renderer.initialize();
 renderer.start();

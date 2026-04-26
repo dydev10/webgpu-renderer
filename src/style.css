@@ -96,6 +96,22 @@ button:focus-visible {
 }
 
 
+.canvas-wrapper {
+  resize: both;
+  overflow: hidden;
+  width: 800px;
+  height: 600px;
+  min-width: 200px;
+  min-height: 150px;
+  display: inline-block;
+}
+
+#gfx-main {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .debug-grid--input {
   display: grid;
   grid-auto-flow: row;
