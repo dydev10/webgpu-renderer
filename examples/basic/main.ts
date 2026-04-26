@@ -16,14 +16,6 @@ document.addEventListener('mousemove', (e) => {
 });
 
 const canvas = document.querySelector('#gfx-main') as HTMLCanvasElement;
-const wrapper = canvas.parentElement!;
-
-new ResizeObserver(entries => {
-  const { width, height } = entries[0].contentRect;
-  const dpr = window.devicePixelRatio;
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
-}).observe(wrapper);
 
 const renderer = new WebGPURenderer(canvas);
 await renderer.initialize();

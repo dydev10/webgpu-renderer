@@ -29,9 +29,11 @@ interface RendererConfig {
   powerPreference?: GPUPowerPreference
   onFrame?:         (dt: number) => void
   onError?:         (err: Error) => void
-  onResize?:        (width: number, height: number) => void
+  onResize?:        (width: number, height: number) => void  // called after canvas pixel dims update
 }
 ```
+
+The renderer sets up a `ResizeObserver` on the canvas during `initialize()`. When the canvas CSS size changes, it updates `canvas.width` and `canvas.height` accounting for `devicePixelRatio`, recreates the framebuffers on the next frame, and calls `onResize` if provided. No external `ResizeObserver` is needed.
 
 ---
 
