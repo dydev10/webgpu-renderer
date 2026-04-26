@@ -1,5 +1,6 @@
 import { WebGPURenderer, StarterScene } from '../../src/index';
 import { SculptureScene } from './SculptureScene';
+import { SpawnScene } from './SpawnScene';
 
 const outputLabel = document.querySelector('#compatibility-check') as HTMLElement;
 outputLabel.innerText = navigator.gpu ? 'WebGPU Enabled' : 'WebGPU Not Supported';
@@ -35,3 +36,24 @@ document.querySelector('#btn-starter')?.addEventListener('click', () => {
 document.querySelector('#btn-sculpture')?.addEventListener('click', () => {
   renderer.setScene(new SculptureScene());
 });
+
+const spawnStats    = document.querySelector('#spawn-stats')    as HTMLElement;
+const statActive    = document.querySelector('#stat-active')    as HTMLElement;
+const statSlots     = document.querySelector('#stat-slots')     as HTMLElement;
+const statExhausted = document.querySelector('#stat-exhausted') as HTMLElement;
+
+let activeSpawnScene: SpawnScene | null = null;
+
+document.querySelector('#btn-spawn')?.addEventListener('click', () => {
+  activeSpawnScene = new SpawnScene();
+  renderer.setScene(activeSpawnScene);
+  spawnStats.style.display = '';
+});
+
+setInterval(() => {
+  if (!activeSpawnScene) return;
+  const { active, totalSpawned, exhausted } = activeSpawnScene.stats;
+  statActive.innerText    = String(active);
+  statSlots.innerText     = String(totalSpawned);
+  statExhausted.innerText = exhausted ? 'YES' : 'no';
+}, 200);
