@@ -13,6 +13,7 @@ export abstract class Scene {
   protected meshEntries: { mesh: Mesh; slot: number }[] = [];
   protected registry?: ResourceRegistry;
   private nextSlot = 0;
+  private freeSlots: number[] = [];
 
   constructor(config?: SceneConfig) {
     const buf = config?.sharedTransformBuffer
@@ -21,12 +22,14 @@ export abstract class Scene {
   }
 
   add(mesh: Mesh): Mesh {
-    const slot = this.nextSlot++;
+    const slot = this.freeSlots.length > 0 ? this.freeSlots.pop()! : this.nextSlot++;
     this.meshEntries.push({ mesh, slot });
     return mesh;
   }
 
   remove(mesh: Mesh): void {
+    const entry = this.meshEntries.find(e => e.mesh === mesh);
+    if (entry) this.freeSlots.push(entry.slot);
     this.meshEntries = this.meshEntries.filter(e => e.mesh !== mesh);
   }
 

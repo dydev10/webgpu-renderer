@@ -76,7 +76,7 @@ No synchronization primitives are required for the current single-writer pattern
 
 ## Known limitations
 
-- **Slot leak on remove.** Slots assigned by `scene.add()` are not reclaimed after `scene.remove()`. Long-running scenes that frequently add and remove objects will eventually exhaust the transform buffer.
+- **Transform buffer limit.** The transform buffer holds `maxObjects` slots (default 1024). Slots are reclaimed when `scene.remove()` is called, so the limit applies to the number of simultaneously active meshes, not the total number ever added.
 - **Vertex layout contract.** World meshes must produce a 20-byte layout (position + texcoord). Overlay meshes must produce a 32-byte layout (position + texcoord + normal). Enforced by convention, not the type system.
 - **Single overlay layer.** Two fixed framebuffers (world and overlay). A dynamic layer stack is not supported in this version.
 - **No geometry batching in base Scene.** The default `buildRenderData` emits one draw call per mesh. `StarterScene` overrides this to produce instanced draw calls.
