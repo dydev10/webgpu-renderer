@@ -70,17 +70,17 @@ requestAnimationFrame(frame);
 
 | Export | Description |
 |--------|-------------|
-| `WebGPURenderer` | Main class. Owns the GPU device, pipelines, and resource registry. |
+| `WebGPURenderer` | Main class. Owns the GPU device, pipelines, and resource registry. Use `setScene()` to hot-swap scenes and `destroy()` to clean up. |
 | `Scene` | Abstract base class. Extend to build custom scenes. |
 | `StarterScene` | Built-in demo scene with geometry, skybox, and first-person controller. |
 | `Camera` | Position and orientation. Computes view/projection matrices. |
 | `Mesh` | Pairs a geometry and material with a transform and render layer. |
-| `Geometry` | Abstract base for all geometry types. |
+| `Geometry` | Abstract base for all geometry types. Call `destroy()` to free the GPU buffer. |
 | `ObjGeometry` | Loads a Wavefront OBJ file from a URL. |
 | `TriangleGeometry` | Single equilateral triangle (position + texcoord). |
 | `QuadGeometry` | Unit quad (position + texcoord). |
-| `Material` | 2D texture. Created from a URL or `ImageBitmap`. |
-| `SkyboxMaterial` | Cube-map texture. Assign to `scene.skybox` to enable sky rendering. |
+| `Material` | 2D texture. Created from a URL or `ImageBitmap`. Call `destroy()` to free the GPU texture. |
+| `SkyboxMaterial` | Cube-map texture. Assign to `scene.skybox` to enable sky rendering. Call `destroy()` to free the GPU texture. |
 | `FirstPersonController` | WASD + mouse-look. Attach to a canvas and camera. |
 
 See [docs/api.md](docs/api.md) for full signatures and [docs/architecture.md](docs/architecture.md) for the render loop, resource registry, and threading model.

@@ -108,7 +108,14 @@ export class WebGPURenderer {
     this.device.queue.submit([encoder.finish()]);
   }
 
-  dispose(): void {
+  async setScene(scene: Scene): Promise<void> {
+    this.scene.onDetach();
+    this.scene = scene;
+    await this.scene.onAttach(this);
+    this.makeSkyBindGroup();
+  }
+
+  destroy(): void {
     this.stop();
     this.scene.onDetach();
   }

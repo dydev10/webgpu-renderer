@@ -12,11 +12,12 @@ class WebGPURenderer {
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig)
 
-  initialize(): Promise<void>     // sets up device, pipelines, calls scene.onAttach()
-  start(): void                   // starts the requestAnimationFrame loop
-  stop(): void                    // cancels the loop
-  renderFrame(dt?: number): void  // runs one frame manually (raw mode)
-  dispose(): void                 // stops the loop and calls scene.onDetach()
+  initialize(): Promise<void>            // sets up device, pipelines, calls scene.onAttach()
+  start(): void                          // starts the requestAnimationFrame loop
+  stop(): void                           // cancels the loop
+  renderFrame(dt?: number): void         // runs one frame manually (raw mode)
+  setScene(scene: Scene): Promise<void>  // hot-swaps the active scene; calls onDetach/onAttach
+  destroy(): void                        // stops the loop and calls scene.onDetach()
 }
 ```
 
