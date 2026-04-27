@@ -48,19 +48,20 @@ renderer.start();
 **Custom scene:**
 
 ```ts
-import { WebGPURenderer, Scene, ObjGeometry, Material, Mesh, Camera } from '@dydev10/webgpu-renderer';
+import { Scene, Camera, ObjGeometry, Material, Mesh, RendererContext } from '@dydev10/webgpu-renderer';
 
 class MyScene extends Scene {
-  async onAttach(renderer: WebGPURenderer) {
+  camera = new Camera([-2, 0, 0.5], 0, 0);  // required -- declare in every subclass
+
+  async onAttach(renderer: RendererContext) {
     await super.onAttach(renderer);
-    this.camera = new Camera([-2, 0, 0.5], 0, 0);
     const geo = await ObjGeometry.load(renderer.device, '/ship.obj');
     const mat = await Material.fromURL(renderer.device, '/ship.png');
     this.add(new Mesh(geo, mat));
   }
 
   update(dt: number) {
-    this.camera.update();
+    this.camera.update();  // required every frame
   }
 }
 

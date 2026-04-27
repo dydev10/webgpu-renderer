@@ -1,3 +1,9 @@
+export interface RendererContext {
+  readonly device: GPUDevice
+  readonly format: GPUTextureFormat
+  readonly canvas: HTMLCanvasElement
+}
+
 export interface AnyMaterial {
   readonly kind: string
   readonly bindGroup: GPUBindGroup

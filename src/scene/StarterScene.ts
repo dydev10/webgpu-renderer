@@ -12,6 +12,7 @@ import { SkyboxMaterial } from '../material/SkyboxMaterial';
 import { FirstPersonController } from '../controller/FirstPersonController';
 import { degToRad } from '../model/mathHelpers';
 import type { InternalRenderData } from '../types/internal';
+import type { RendererContext } from '../types/public';
 
 const SKY_URLS: [string, string, string, string, string, string] = [
   '/img/sky_back.png',
@@ -39,18 +40,17 @@ export class StarterScene extends Scene {
   private gunMat?: Material;
   private controller?: FirstPersonController;
 
+  camera = new Camera([-2, 0, 0.5], 0, 0);
+
   constructor() {
     super();
-    this.camera = new Camera([-2, 0, 0.5], 0, 0);
     this.generateTriangles();
     this.generateQuads();
     this.statue = new Statue([0, 0, 0], [0, 0, 0]);
   }
 
-  async onAttach(renderer: unknown): Promise<void> {
+  async onAttach(renderer: RendererContext): Promise<void> {
     await super.onAttach(renderer);
-    const r = renderer as { device: GPUDevice; canvas: HTMLCanvasElement };
-
     const preTransform = mat4.create();
 
     let gunPreTransform = mat4.clone(preTransform);
@@ -72,18 +72,18 @@ export class StarterScene extends Scene {
       this.gunMat,
       this.skybox,
     ] = await Promise.all([
-      Promise.resolve(new TriangleGeometry(r.device)),
-      Promise.resolve(new QuadGeometry(r.device)),
-      ObjGeometry.load(r.device, '/model/ground.obj', { preTransform }),
-      ObjGeometry.load(r.device, '/model/gun.obj', { normals: true, preTransform: gunPreTransform }),
-      Material.fromURL(r.device, '/img/synth.jpg'),
-      Material.fromURL(r.device, '/img/floor.png'),
-      Material.fromURL(r.device, '/img/synth.jpg'),
-      Material.fromURL(r.device, '/img/gun.png'),
-      SkyboxMaterial.fromURLs(r.device, SKY_URLS),
+      Promise.resolve(new TriangleGeometry(renderer.device)),
+      Promise.resolve(new QuadGeometry(renderer.device)),
+      ObjGeometry.load(renderer.device, '/model/ground.obj', { preTransform }),
+      ObjGeometry.load(renderer.device, '/model/gun.obj', { normals: true, preTransform: gunPreTransform }),
+      Material.fromURL(renderer.device, '/img/synth.jpg'),
+      Material.fromURL(renderer.device, '/img/floor.png'),
+      Material.fromURL(renderer.device, '/img/synth.jpg'),
+      Material.fromURL(renderer.device, '/img/gun.png'),
+      SkyboxMaterial.fromURLs(renderer.device, SKY_URLS),
     ]);
 
-    this.controller = new FirstPersonController(r.canvas, this.camera);
+    this.controller = new FirstPersonController(renderer.canvas, this.camera);
   }
 
   update(_dt?: number): void {

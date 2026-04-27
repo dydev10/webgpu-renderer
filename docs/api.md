@@ -44,8 +44,8 @@ Abstract base class for all scenes. Extend this to build custom scenes.
 
 ```ts
 abstract class Scene {
-  camera:   Camera
-  skybox?:  SkyboxMaterial
+  abstract camera: Camera       // must be declared as a class field in every subclass
+  skybox?:         SkyboxMaterial
 
   constructor(config?: SceneConfig)
 
@@ -55,7 +55,7 @@ abstract class Scene {
   abstract update(dt?: number): void
 
   // Lifecycle -- called by the renderer, not by consumer code
-  onAttach(renderer: unknown): Promise<void>  // load assets here; call super.onAttach() first
+  onAttach(renderer: RendererContext): Promise<void>  // load assets here; call super.onAttach() first
   onDetach(): void
 }
 ```
@@ -192,6 +192,22 @@ class QuadGeometry extends Geometry {
   constructor(device: GPUDevice)
 }
 ```
+
+---
+
+## RendererContext
+
+Interface passed to `Scene.onAttach()`. Cast `renderer` to this type to access the GPU device, canvas format, and canvas element needed to create materials and geometry.
+
+```ts
+interface RendererContext {
+  readonly device: GPUDevice
+  readonly format: GPUTextureFormat
+  readonly canvas: HTMLCanvasElement
+}
+```
+
+`WebGPURenderer` satisfies this interface structurally — no explicit cast is required at the call site.
 
 ---
 

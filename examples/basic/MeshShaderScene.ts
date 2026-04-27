@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix';
-import { Scene, Camera, QuadGeometry, Mesh, MeshShaderMaterial } from '../../src/index';
+import { Scene, Camera, QuadGeometry, Mesh, MeshShaderMaterial, RendererContext } from '../../src/index';
 
 const FRAGMENT_SHADER = /* wgsl */`
 @fragment
@@ -14,22 +14,18 @@ fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
 const GRID = 5;
 
 export class MeshShaderScene extends Scene {
+  camera = new Camera([0, -4, 3], 90, -30);
+
   private mat?: MeshShaderMaterial;
   private canvas?: HTMLCanvasElement;
   private elapsed = 0;
 
-  constructor() {
-    super();
-    this.camera = new Camera([0, -4, 3], 90, -30);
-  }
-
-  async onAttach(renderer: unknown): Promise<void> {
+  async onAttach(renderer: RendererContext): Promise<void> {
     await super.onAttach(renderer);
-    const r = renderer as { device: GPUDevice; format: GPUTextureFormat; canvas: HTMLCanvasElement };
-    this.canvas = r.canvas;
+    this.canvas = renderer.canvas;
 
-    const geo = new QuadGeometry(r.device);
-    this.mat  = MeshShaderMaterial.create(r.device, r.format, FRAGMENT_SHADER);
+    const geo = new QuadGeometry(renderer.device);
+    this.mat  = MeshShaderMaterial.create(renderer.device, renderer.format, FRAGMENT_SHADER);
 
     const half = Math.floor(GRID / 2);
     let slot = 0;

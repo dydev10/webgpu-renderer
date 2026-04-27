@@ -1,4 +1,4 @@
-import { Scene, Camera, Mesh, FullScreenMaterial } from '../../src/index';
+import { Scene, Camera, Mesh, FullScreenMaterial, RendererContext } from '../../src/index';
 
 const FRAGMENT_SHADER = /* wgsl */`
 @fragment
@@ -13,20 +13,16 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
 `;
 
 export class FullScreenShaderScene extends Scene {
+  camera = new Camera([0, 0, 1], 0, 0);
+
   private mat?: FullScreenMaterial;
   private canvas?: HTMLCanvasElement;
   private elapsed = 0;
 
-  constructor() {
-    super();
-    this.camera = new Camera([0, 0, 1], 0, 0);
-  }
-
-  async onAttach(renderer: unknown): Promise<void> {
+  async onAttach(renderer: RendererContext): Promise<void> {
     await super.onAttach(renderer);
-    const r = renderer as { device: GPUDevice; format: GPUTextureFormat; canvas: HTMLCanvasElement };
-    this.canvas = r.canvas;
-    this.mat = FullScreenMaterial.create(r.device, r.format, FRAGMENT_SHADER);
+    this.canvas = renderer.canvas;
+    this.mat = FullScreenMaterial.create(renderer.device, renderer.format, FRAGMENT_SHADER);
     this.add(new Mesh(null, this.mat));
   }
 

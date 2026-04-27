@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix';
-import { Scene, Camera, TriangleGeometry, Material, Mesh, SkyboxMaterial } from '../../src/index';
+import { Scene, Camera, TriangleGeometry, Material, Mesh, SkyboxMaterial, RendererContext } from '../../src/index';
 
 const SKY_URLS: [string, string, string, string, string, string] = [
   '/img/sky_back.png',
@@ -21,6 +21,8 @@ interface SpawnEntry {
 }
 
 export class SpawnScene extends Scene {
+  camera = new Camera([0, -5, 3], 90, -20);
+
   private geo?: TriangleGeometry;
   private mat?: Material;
   private active: SpawnEntry[] = [];
@@ -29,18 +31,12 @@ export class SpawnScene extends Scene {
 
   readonly stats = { active: 0, totalSpawned: 0, exhausted: false };
 
-  constructor() {
-    super();
-    this.camera = new Camera([0, -5, 3], 90, -20);
-  }
-
-  async onAttach(renderer: unknown): Promise<void> {
+  async onAttach(renderer: RendererContext): Promise<void> {
     await super.onAttach(renderer);
-    const r = renderer as { device: GPUDevice };
-    this.geo = new TriangleGeometry(r.device);
+    this.geo = new TriangleGeometry(renderer.device);
     [this.mat, this.skybox] = await Promise.all([
-      Material.fromURL(r.device, '/img/synth.jpg'),
-      SkyboxMaterial.fromURLs(r.device, SKY_URLS),
+      Material.fromURL(renderer.device, '/img/synth.jpg'),
+      SkyboxMaterial.fromURLs(renderer.device, SKY_URLS),
     ]);
   }
 

@@ -13,4 +13,4 @@ export { MeshShaderMaterial }    from './material/MeshShaderMaterial';
 export { SkyboxMaterial }        from './material/SkyboxMaterial';
 export { FirstPersonController } from './controller/FirstPersonController';
 export type { GeometryHandle, MaterialHandle, SkyboxHandle } from './types/handles';
-export type { RendererConfig, SceneConfig, MeshLoadOptions, AnyMaterial } from './types/public';
+export type { RendererConfig, SceneConfig, MeshLoadOptions, AnyMaterial, RendererContext } from './types/public';

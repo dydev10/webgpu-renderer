@@ -1,7 +1,9 @@
 import { mat4 } from 'gl-matrix';
-import { Scene, Camera, ObjGeometry, QuadGeometry, Material, Mesh, FirstPersonController } from '../../src/index';
+import { Scene, Camera, ObjGeometry, QuadGeometry, Material, Mesh, FirstPersonController, RendererContext } from '../../src/index';
 
 export class SculptureScene extends Scene {
+  camera = new Camera([0, -2, 0.5], 90, -15);
+
   private sculptureGeo?: ObjGeometry;
   private floorGeo?: QuadGeometry;
   private sculptureMat?: Material;
@@ -9,14 +11,8 @@ export class SculptureScene extends Scene {
   private controller?: FirstPersonController;
   private sculptureAngle = 0;
 
-  constructor() {
-    super();
-    this.camera = new Camera([0, -2, 0.5], 90, -15);
-  }
-
-  async onAttach(renderer: unknown): Promise<void> {
+  async onAttach(renderer: RendererContext): Promise<void> {
     await super.onAttach(renderer);
-    const r = renderer as { device: GPUDevice; canvas: HTMLCanvasElement };
 
     const sculptureTransform = mat4.create();
     mat4.translate(sculptureTransform, sculptureTransform, [0, 0, 0.3]);
@@ -24,10 +20,10 @@ export class SculptureScene extends Scene {
     mat4.scale(sculptureTransform, sculptureTransform, [0.001, 0.001, 0.001]);
 
     [this.sculptureGeo, this.floorGeo, this.sculptureMat, this.floorMat] = await Promise.all([
-      ObjGeometry.load(r.device, '/model/sculpture.obj', { preTransform: sculptureTransform }),
-      Promise.resolve(new QuadGeometry(r.device)),
-      Material.fromURL(r.device, '/img/sculpture_albedo.jpg'),
-      Material.fromURL(r.device, '/img/floor.png'),
+      ObjGeometry.load(renderer.device, '/model/sculpture.obj', { preTransform: sculptureTransform }),
+      Promise.resolve(new QuadGeometry(renderer.device)),
+      Material.fromURL(renderer.device, '/img/sculpture_albedo.jpg'),
+      Material.fromURL(renderer.device, '/img/floor.png'),
     ]);
 
     this.add(new Mesh(this.sculptureGeo!, this.sculptureMat!));
@@ -44,7 +40,7 @@ export class SculptureScene extends Scene {
       }
     }
 
-    this.controller = new FirstPersonController(r.canvas, this.camera);
+    this.controller = new FirstPersonController(renderer.canvas, this.camera);
   }
 
   update(dt = 16): void {

@@ -2,12 +2,12 @@ import { mat4 } from 'gl-matrix';
 import { Camera } from '../model/camera';
 import type { SkyboxMaterial } from '../material/SkyboxMaterial';
 import type { Mesh } from '../mesh/Mesh';
-import type { SceneConfig } from '../types/public';
+import type { RendererContext, SceneConfig } from '../types/public';
 import type { InternalRenderData } from '../types/internal';
 import type { ResourceRegistry } from '../registry/ResourceRegistry';
 
 export abstract class Scene {
-  camera!: Camera;
+  abstract camera: Camera;
   skybox?: SkyboxMaterial;
   protected objectData: Float32Array;
   protected meshEntries: { mesh: Mesh; slot: number }[] = [];
@@ -35,8 +35,8 @@ export abstract class Scene {
 
   abstract update(dt?: number): void;
 
-  async onAttach(renderer: unknown): Promise<void> {
-    this.registry = (renderer as { registry: ResourceRegistry }).registry;
+  async onAttach(renderer: RendererContext): Promise<void> {
+    this.registry = (renderer as unknown as { registry: ResourceRegistry }).registry;
   }
 
   onDetach(): void {}
