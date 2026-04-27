@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0] - 2026-04-27
+
+### Added
+
+- `RendererContext` interface exported from the package. Use it to type the `renderer` parameter in `onAttach` instead of casting from `unknown`. `WebGPURenderer` satisfies it structurally.
+
+### Changed
+
+- `Scene.camera` is now `abstract`. Every subclass must declare it as a class field -- omitting it is now a compile error instead of a runtime crash on the first frame.
+- `Scene.onAttach` parameter type changed from `unknown` to `RendererContext`. Subclasses that override `onAttach` must update their signature accordingly.
+
+### Breaking
+
+- Subclasses of `Scene` that assign `this.camera` only in the constructor without a class-level field declaration will fail to compile. Add `camera = new Camera(...)` as a class field.
+- `onAttach(renderer: unknown)` overrides must be updated to `onAttach(renderer: RendererContext)`.
+
 ## [0.3.2] - 2026-04-27
 
 ### Fixed
