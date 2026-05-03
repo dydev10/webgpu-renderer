@@ -9,6 +9,7 @@ export class SculptureScene extends Scene {
   private sculptureMat?: Material;
   private floorMat?: Material;
   private controller?: FirstPersonController;
+  private sculptureMesh?: Mesh;
   private sculptureAngle = 0;
 
   async onAttach(renderer: RendererContext): Promise<void> {
@@ -26,17 +27,11 @@ export class SculptureScene extends Scene {
       Material.fromURL(renderer.device, '/img/floor.png'),
     ]);
 
-    this.add(new Mesh(this.sculptureGeo!, this.sculptureMat!));
-    this.updateObjectBufferFromModelMatrix(0, mat4.create());
+    this.sculptureMesh = this.add(new Mesh(this.sculptureGeo!, this.sculptureMat!));
 
-    let slot = 1;
     for (let x = -5; x <= 5; x++) {
       for (let y = -5; y <= 5; y++) {
-        this.add(new Mesh(this.floorGeo!, this.floorMat!));
-        const m = mat4.create();
-        mat4.translate(m, m, [x, y, 0]);
-        this.updateObjectBufferFromModelMatrix(slot, m);
-        slot++;
+        this.add(new Mesh(this.floorGeo!, this.floorMat!)).setPosition([x, y, 0]);
       }
     }
 
@@ -46,9 +41,7 @@ export class SculptureScene extends Scene {
   update(dt = 16): void {
     this.controller?.update();
     this.sculptureAngle += dt * 0.001;
-    const m = mat4.create();
-    mat4.rotateZ(m, m, this.sculptureAngle);
-    this.updateObjectBufferFromModelMatrix(0, m);
+    this.sculptureMesh?.setRotation([0, 0, this.sculptureAngle * (180 / Math.PI)]);
     this.camera.update();
   }
 }

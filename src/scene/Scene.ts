@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { mat4, quat } from 'gl-matrix';
 import { Camera } from '../model/camera';
 import type { SkyboxMaterial } from '../material/SkyboxMaterial';
 import type { Mesh } from '../mesh/Mesh';
@@ -57,6 +57,14 @@ export abstract class Scene {
   }
 
   buildRenderData(aspect: number): InternalRenderData {
+    for (const { mesh, slot } of this.meshEntries) {
+      const q = quat.create();
+      quat.fromEuler(q, mesh.rotation[0], mesh.rotation[1], mesh.rotation[2]);
+      const m = mat4.create();
+      mat4.fromRotationTranslationScale(m, q, mesh.position, mesh.scale);
+      this.objectData.set(m as unknown as Float32Array, slot * 16);
+    }
+
     const worldCalls   = [];
     const overlayCalls = [];
     const shaderCalls  = [];
@@ -89,9 +97,4 @@ export abstract class Scene {
     };
   }
 
-  protected updateObjectBufferFromModelMatrix(index: number, model = mat4.create()): void {
-    for (let j = 0; j < 16; j++) {
-      this.objectData[16 * index + j] = model.at(j) as number;
-    }
-  }
 }

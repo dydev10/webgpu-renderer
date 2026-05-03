@@ -123,14 +123,24 @@ Pairs a geometry and a material with a transform and a render layer.
 type RenderLayer = 'world' | 'overlay'
 
 class Mesh {
-  readonly geometry:  Geometry | null  // null when used with FullScreenMaterial
-  readonly material:  AnyMaterial
-  readonly transform: mat4             // identity on construction; mutate directly
-  readonly layer:     RenderLayer      // default 'world'
+  readonly geometry: Geometry | null  // null when used with FullScreenMaterial
+  readonly material: AnyMaterial
+  readonly layer:    RenderLayer      // default 'world'
+
+  position: [number, number, number]  // default [0, 0, 0]
+  rotation: [number, number, number]  // degrees, XYZ euler order; default [0, 0, 0]
+  scale:    [number, number, number]  // default [1, 1, 1]
 
   constructor(geometry: Geometry | null, material: AnyMaterial, layer?: RenderLayer)
+
+  setPosition(pos: [number, number, number]): this
+  setRotation(rot: [number, number, number]): this
+  setScale(s: [number, number, number] | number): this  // number = uniform scale
+  setTransform(t: { position?, rotation?, scale? }): this
 }
 ```
+
+`Scene.buildRenderData` auto-computes the world matrix from `position`, `rotation`, and `scale` each frame — no manual mat4 construction needed. All setter methods return `this` for chaining: `scene.add(mesh).setPosition([1, 0, 0])`.
 
 `'world'` meshes are drawn with view and projection applied. `'overlay'` meshes (such as a gun model) are drawn projection-only into a separate framebuffer and composited on top.
 
