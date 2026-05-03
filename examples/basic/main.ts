@@ -19,7 +19,7 @@ document.addEventListener('mousemove', (e) => {
 
 const canvas = document.querySelector('#gfx-main') as HTMLCanvasElement;
 
-const renderer = new WebGPURenderer(canvas);
+const renderer = new WebGPURenderer(canvas, { scene: new StarterScene() });
 await renderer.initialize();
 renderer.start();
 

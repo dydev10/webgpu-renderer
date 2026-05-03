@@ -122,8 +122,9 @@ export class WebGPURenderer {
 
   async setScene(scene: Scene): Promise<void> {
     this.scene.onDetach();
+    this.skyBindGroup = undefined;
+    await scene.onAttach(this);
     this.scene = scene;
-    await this.scene.onAttach(this);
     this.makeSkyBindGroup();
   }
 

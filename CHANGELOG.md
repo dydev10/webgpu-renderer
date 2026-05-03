@@ -12,6 +12,10 @@
 - `Scene.onDetach()` auto-destroys all mesh geometry, materials, and skybox. Override with `super.onDetach()` first if you need additional cleanup.
 - `Mesh` now has `position`, `rotation` (degrees, XYZ euler), and `scale` fields with setter methods (`setPosition`, `setRotation`, `setScale`, `setTransform`). `Scene.buildRenderData` auto-computes the world matrix each frame.
 
+### Fixed
+
+- `setScene()` no longer crashes the render loop when the incoming scene has async assets — the scene pointer is updated only after `onAttach` resolves.
+
 ### Breaking
 
 - `mesh.transform` (`mat4`) removed. Use `mesh.position`, `mesh.rotation`, `mesh.scale` instead.
