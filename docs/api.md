@@ -248,6 +248,7 @@ class Material implements AnyMaterial {
 
   static fromURL(device: GPUDevice, url: string): Promise<Material>
   static fromBitmap(device: GPUDevice, bitmap: ImageBitmap): Promise<Material>
+  static fromColor(device: GPUDevice, r: number, g: number, b: number, a?: number): Material  // 0–1 float range; a defaults to 1
 
   destroy(): void  // destroys the underlying GPU texture
 }

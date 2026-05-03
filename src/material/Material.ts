@@ -28,6 +28,29 @@ export class Material {
       { width: bitmap.width, height: bitmap.height },
     );
 
+    return new Material(texture, Material.makeBindGroup(device, texture));
+  }
+
+  static fromColor(device: GPUDevice, r: number, g: number, b: number, a = 1): Material {
+    const data = new Uint8ClampedArray([
+      Math.round(r * 255),
+      Math.round(g * 255),
+      Math.round(b * 255),
+      Math.round(a * 255),
+    ]);
+
+    const texture = device.createTexture({
+      size: [1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    device.queue.writeTexture({ texture }, data, { bytesPerRow: 4 }, [1, 1]);
+
+    return new Material(texture, Material.makeBindGroup(device, texture));
+  }
+
+  private static makeBindGroup(device: GPUDevice, texture: GPUTexture): GPUBindGroup {
     const view = texture.createView({
       format: 'rgba8unorm',
       dimension: '2d',
@@ -54,15 +77,13 @@ export class Material {
       ],
     });
 
-    const bindGroup = device.createBindGroup({
+    return device.createBindGroup({
       layout,
       entries: [
         { binding: 0, resource: view },
         { binding: 1, resource: sampler },
       ],
     });
-
-    return new Material(texture, bindGroup);
   }
 
   destroy(): void {
