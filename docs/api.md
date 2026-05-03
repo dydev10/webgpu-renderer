@@ -13,6 +13,8 @@ class WebGPURenderer {
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig)
 
+  static isSupported(): Promise<boolean>  // returns false if WebGPU is unavailable or no adapter found
+
   initialize(): Promise<void>            // sets up device, pipelines, calls scene.onAttach()
   start(): void                          // starts the requestAnimationFrame loop
   stop(): void                           // cancels the loop
@@ -219,6 +221,7 @@ Interface satisfied by all material types. The registry and `Mesh` accept any ob
 interface AnyMaterial {
   readonly kind:      string
   readonly bindGroup: GPUBindGroup
+  destroy():          void
 }
 ```
 

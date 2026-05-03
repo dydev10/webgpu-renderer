@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.0] - unreleased
+
+### Added
+
+- `WebGPURenderer.isSupported()` — static async check; returns `false` if WebGPU is unavailable or no adapter found.
+- `AnyMaterial.destroy(): void` added to the interface (all concrete classes already implement it).
+
+---
+
 ## [0.4.0] - 2026-04-27
 
 ### Added

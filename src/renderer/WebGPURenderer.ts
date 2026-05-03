@@ -29,6 +29,12 @@ const OVERLAY_VERTEX_LAYOUT: GPUVertexBufferLayout = {
 };
 
 export class WebGPURenderer {
+  static async isSupported(): Promise<boolean> {
+    if (!navigator.gpu) return false;
+    const adapter = await navigator.gpu.requestAdapter();
+    return adapter !== null;
+  }
+
   readonly canvas: HTMLCanvasElement;
   readonly registry: ResourceRegistry;
   device!: GPUDevice;

@@ -7,6 +7,7 @@ export interface RendererContext {
 export interface AnyMaterial {
   readonly kind: string
   readonly bindGroup: GPUBindGroup
+  destroy(): void
 }
 
 export interface RendererConfig {
