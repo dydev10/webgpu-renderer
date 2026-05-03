@@ -23,6 +23,10 @@ export interface SceneConfig {
   sharedTransformBuffer?: SharedArrayBuffer
 }
 
+export interface ShaderMaterialOptions {
+  fsEntry?: string  // fragment entry point name — default 'fs_main'
+}
+
 export interface MeshLoadOptions {
   normals?:      boolean
   texCoords?:    boolean

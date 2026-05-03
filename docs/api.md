@@ -237,6 +237,18 @@ interface AnyMaterial {
 
 ---
 
+## ShaderMaterialOptions
+
+Optional second argument to `FullScreenMaterial.create()` and `MeshShaderMaterial.create()`.
+
+```ts
+interface ShaderMaterialOptions {
+  fsEntry?: string  // fragment entry point name — default 'fs_main'
+}
+```
+
+---
+
 ## Material
 
 A 2D texture material. Creates a GPU texture, view, sampler, and bind group from a URL or an existing `ImageBitmap`.
@@ -304,7 +316,7 @@ class FullScreenMaterial implements AnyMaterial {
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): FullScreenMaterial
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): FullScreenMaterial
 
   tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
   destroy(): void
@@ -340,7 +352,7 @@ class MeshShaderMaterial implements AnyMaterial {
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): MeshShaderMaterial
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): MeshShaderMaterial
 
   tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
   destroy(): void
