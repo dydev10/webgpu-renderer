@@ -37,7 +37,9 @@ The renderer resolves handles to GPU objects (`geo.buffer`, `mat.bindGroup`) on 
 
 GPU textures and buffers are created during `scene.onAttach()` (or in geometry/material constructors for non-scene use). The renderer does not own or track individual GPU objects; it only resolves handles at draw time.
 
-Transform data for all meshes in a scene lives in a single `Float32Array` (`objectData`). Each mesh is assigned a slot (index into the array) when `scene.add(mesh)` is called. Slots are not reused after `scene.remove(mesh)` in the current version. Scenes that add and remove many objects over their lifetime will exhaust the buffer at `maxObjects * 64` bytes. The default limit is 1024 objects.
+`Scene.onDetach()` auto-destroys all mesh geometry, materials, and the skybox. Subclasses that override `onDetach` must call `super.onDetach()` first to ensure cleanup runs.
+
+Transform data for all meshes in a scene lives in a single `Float32Array` (`objectData`). Each mesh is assigned a slot (index into the array) when `scene.add(mesh)` is called. Slots are returned to a free-list when `scene.remove(mesh)` is called and reused by subsequent `add()` calls. The limit applies to simultaneously active meshes, not the total ever added.
 
 ---
 

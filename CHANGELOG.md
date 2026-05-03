@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0] - unreleased
+
+### Added
+
+- `WebGPURenderer.isSupported()` — static async check; returns `false` if WebGPU is unavailable or no adapter found.
+- `Material.fromColor(device, r, g, b, a?)` — creates a solid-color 1×1 texture material. Inputs are 0–1 float range.
+- `FullScreenMaterial.wgslUniforms` and `MeshShaderMaterial.wgslUniforms` — static strings exposing the exact WGSL uniform block injected before the fragment shader.
+- `ShaderMaterialOptions` — optional fourth argument to both `create()` methods. `fsEntry` overrides the fragment entry point name (default `'fs_main'`).
+- `AnyMaterial.destroy(): void` added to the interface (all concrete classes already implement it).
+- `Scene.onDetach()` auto-destroys all mesh geometry, materials, and skybox. Override with `super.onDetach()` first if you need additional cleanup.
+- `Mesh` now has `position`, `rotation` (degrees, XYZ euler), and `scale` fields with setter methods (`setPosition`, `setRotation`, `setScale`, `setTransform`). `Scene.buildRenderData` auto-computes the world matrix each frame.
+
+### Fixed
+
+- `setScene()` no longer crashes the render loop when the incoming scene has async assets — the scene pointer is updated only after `onAttach` resolves.
+
+### Breaking
+
+- `mesh.transform` (`mat4`) removed. Use `mesh.position`, `mesh.rotation`, `mesh.scale` instead.
+- `Scene.updateObjectBufferFromModelMatrix()` removed. Set mesh fields directly.
+
+---
+
 ## [0.4.0] - 2026-04-27
 
 ### Added

@@ -31,8 +31,4 @@ export class FullScreenShaderScene extends Scene {
     this.mat?.tick(this.elapsed, this.canvas!.width, this.canvas!.height);
   }
 
-  onDetach(): void {
-    this.mat?.destroy();
-    this.mat = undefined;
-  }
 }

@@ -1,4 +1,3 @@
-import { mat4 } from 'gl-matrix';
 import { Scene, Camera, TriangleGeometry, Material, Mesh, SkyboxMaterial, RendererContext } from '../../src/index';
 
 const SKY_URLS: [string, string, string, string, string, string] = [
@@ -16,7 +15,6 @@ const MAX_SLOTS      = 1024;
 
 interface SpawnEntry {
   mesh:     Mesh;
-  slot:     number;
   expireAt: number;
 }
 
@@ -51,16 +49,9 @@ export class SpawnScene extends Scene {
     this.spawnTimer += dt;
     if (this.spawnTimer >= SPAWN_INTERVAL && this.meshEntries.length < MAX_SLOTS) {
       this.spawnTimer = 0;
-      const mesh = this.add(new Mesh(this.geo!, this.mat!));
-      const slot = this.meshEntries[this.meshEntries.length - 1].slot;
-      const m = mat4.create();
-      mat4.translate(m, m, [
-        (Math.random() - 0.5) * 6,
-        (Math.random() - 0.5) * 6,
-        0,
-      ]);
-      this.updateObjectBufferFromModelMatrix(slot, m);
-      this.active.push({ mesh, slot, expireAt: now + LIFETIME });
+      const mesh = this.add(new Mesh(this.geo!, this.mat!))
+        .setPosition([(Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 0]);
+      this.active.push({ mesh, expireAt: now + LIFETIME });
       this.totalSpawned++;
     }
 

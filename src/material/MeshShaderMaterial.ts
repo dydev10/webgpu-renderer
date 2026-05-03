@@ -1,3 +1,5 @@
+import type { ShaderMaterialOptions } from '../types/public';
+
 // Group 0 layout mirrors the renderer's worldFrameLayout exactly so the renderer can
 // bind its existing worldFrameBindGroup at slot 0 without any additional setup.
 const GROUP0_LAYOUT_DESC: GPUBindGroupLayoutDescriptor = {
@@ -46,6 +48,8 @@ struct ShaderUniforms { time: f32, _pad: f32, resolution: vec2<f32> }
 `;
 
 export class MeshShaderMaterial {
+  static readonly wgslUniforms: string = UNIFORM_PREAMBLE;
+
   readonly kind = 'mesh-shader' as const;
   readonly bindGroup: GPUBindGroup;
   readonly pipeline: GPURenderPipeline;
@@ -66,7 +70,7 @@ export class MeshShaderMaterial {
     this.uniformBuffer = uniformBuffer;
   }
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): MeshShaderMaterial {
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): MeshShaderMaterial {
     const group0Layout = device.createBindGroupLayout(GROUP0_LAYOUT_DESC);
 
     const group1Layout = device.createBindGroupLayout({
@@ -94,7 +98,7 @@ export class MeshShaderMaterial {
       },
       fragment: {
         module: device.createShaderModule({ code: UNIFORM_PREAMBLE + '\n' + fragmentShader }),
-        entryPoint: 'fs_main',
+        entryPoint: options?.fsEntry ?? 'fs_main',
         targets: [{ format }],
       },
       primitive: { topology: 'triangle-list' },

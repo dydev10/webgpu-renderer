@@ -86,21 +86,26 @@ export class StarterScene extends Scene {
     this.controller = new FirstPersonController(renderer.canvas, this.camera);
   }
 
+  onDetach(): void {
+    super.onDetach();
+    this.controller?.dispose();
+  }
+
   update(_dt?: number): void {
     this.controller?.update();
 
     this.triangles.forEach((tri, i) => {
       tri.update();
-      this.updateObjectBufferFromModelMatrix(i, tri.getModel());
+      this.objectData.set(tri.getModel(), i * 16);
     });
 
     this.quads.forEach((quad, i) => {
       quad.update();
-      this.updateObjectBufferFromModelMatrix(i + this.triangleCount, quad.getModel());
+      this.objectData.set(quad.getModel(), (i + this.triangleCount) * 16);
     });
 
     this.statue.update();
-    this.updateObjectBufferFromModelMatrix(this.triangleCount + this.quadCount, this.statue.getModel());
+    this.objectData.set(this.statue.getModel(), (this.triangleCount + this.quadCount) * 16);
 
     this.camera.update();
   }
@@ -141,7 +146,7 @@ export class StarterScene extends Scene {
   private generateTriangles(): void {
     for (let y = -5; y <= 5; y++) {
       this.triangles.push(new Triangle([2, y, 0], 0));
-      this.updateObjectBufferFromModelMatrix(this.triangleCount, mat4.create());
+      this.objectData.set(mat4.create(), this.triangleCount * 16);
       this.triangleCount++;
     }
   }
@@ -151,7 +156,7 @@ export class StarterScene extends Scene {
     for (let x = -10; x <= 10; x++) {
       for (let y = -10; y <= 10; y++) {
         this.quads.push(new Quad([x, y, 0]));
-        this.updateObjectBufferFromModelMatrix(i, mat4.create());
+        this.objectData.set(mat4.create(), i * 16);
         i++;
         this.quadCount++;
       }

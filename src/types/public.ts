@@ -7,6 +7,7 @@ export interface RendererContext {
 export interface AnyMaterial {
   readonly kind: string
   readonly bindGroup: GPUBindGroup
+  destroy(): void
 }
 
 export interface RendererConfig {
@@ -20,6 +21,10 @@ export interface RendererConfig {
 export interface SceneConfig {
   maxObjects?:           number
   sharedTransformBuffer?: SharedArrayBuffer
+}
+
+export interface ShaderMaterialOptions {
+  fsEntry?: string  // fragment entry point name — default 'fs_main'
 }
 
 export interface MeshLoadOptions {

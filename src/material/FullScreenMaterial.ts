@@ -1,3 +1,5 @@
+import type { ShaderMaterialOptions } from '../types/public';
+
 const VERTEX_SHADER = /* wgsl */`
 @vertex
 fn vs_main(@builtin(vertex_index) idx: u32) -> @builtin(position) vec4<f32> {
@@ -15,6 +17,8 @@ struct ShaderUniforms { time: f32, _pad: f32, resolution: vec2<f32> }
 `;
 
 export class FullScreenMaterial {
+  static readonly wgslUniforms: string = UNIFORM_PREAMBLE;
+
   readonly kind = 'fullscreen' as const;
   readonly bindGroup: GPUBindGroup;
   readonly pipeline: GPURenderPipeline;
@@ -35,7 +39,7 @@ export class FullScreenMaterial {
     this.uniformBuffer = uniformBuffer;
   }
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): FullScreenMaterial {
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): FullScreenMaterial {
     const layout = device.createBindGroupLayout({
       entries: [
         { binding: 0, visibility: GPUShaderStage.FRAGMENT, buffer: { type: 'uniform' } },
@@ -60,7 +64,7 @@ export class FullScreenMaterial {
       },
       fragment: {
         module: device.createShaderModule({ code: UNIFORM_PREAMBLE + '\n' + fragmentShader }),
-        entryPoint: 'fs_main',
+        entryPoint: options?.fsEntry ?? 'fs_main',
         targets: [{ format }],
       },
       primitive: { topology: 'triangle-list' },

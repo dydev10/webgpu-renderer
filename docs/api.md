@@ -13,6 +13,8 @@ class WebGPURenderer {
 
   constructor(canvas: HTMLCanvasElement, config?: RendererConfig)
 
+  static isSupported(): Promise<boolean>  // returns false if WebGPU is unavailable or no adapter found
+
   initialize(): Promise<void>            // sets up device, pipelines, calls scene.onAttach()
   start(): void                          // starts the requestAnimationFrame loop
   stop(): void                           // cancels the loop
@@ -56,7 +58,7 @@ abstract class Scene {
 
   // Lifecycle -- called by the renderer, not by consumer code
   onAttach(renderer: RendererContext): Promise<void>  // load assets here; call super.onAttach() first
-  onDetach(): void
+  onDetach(): void  // auto-destroys all mesh geometry, materials, and skybox; call super.onDetach() first if overriding
 }
 ```
 
@@ -121,14 +123,24 @@ Pairs a geometry and a material with a transform and a render layer.
 type RenderLayer = 'world' | 'overlay'
 
 class Mesh {
-  readonly geometry:  Geometry | null  // null when used with FullScreenMaterial
-  readonly material:  AnyMaterial
-  readonly transform: mat4             // identity on construction; mutate directly
-  readonly layer:     RenderLayer      // default 'world'
+  readonly geometry: Geometry | null  // null when used with FullScreenMaterial
+  readonly material: AnyMaterial
+  readonly layer:    RenderLayer      // default 'world'
+
+  position: [number, number, number]  // default [0, 0, 0]
+  rotation: [number, number, number]  // degrees, XYZ euler order; default [0, 0, 0]
+  scale:    [number, number, number]  // default [1, 1, 1]
 
   constructor(geometry: Geometry | null, material: AnyMaterial, layer?: RenderLayer)
+
+  setPosition(pos: [number, number, number]): this
+  setRotation(rot: [number, number, number]): this
+  setScale(s: [number, number, number] | number): this  // number = uniform scale
+  setTransform(t: { position?, rotation?, scale? }): this
 }
 ```
+
+`Scene.buildRenderData` auto-computes the world matrix from `position`, `rotation`, and `scale` each frame — no manual mat4 construction needed. All setter methods return `this` for chaining: `scene.add(mesh).setPosition([1, 0, 0])`.
 
 `'world'` meshes are drawn with view and projection applied. `'overlay'` meshes (such as a gun model) are drawn projection-only into a separate framebuffer and composited on top.
 
@@ -219,6 +231,19 @@ Interface satisfied by all material types. The registry and `Mesh` accept any ob
 interface AnyMaterial {
   readonly kind:      string
   readonly bindGroup: GPUBindGroup
+  destroy():          void
+}
+```
+
+---
+
+## ShaderMaterialOptions
+
+Optional second argument to `FullScreenMaterial.create()` and `MeshShaderMaterial.create()`.
+
+```ts
+interface ShaderMaterialOptions {
+  fsEntry?: string  // fragment entry point name — default 'fs_main'
 }
 ```
 
@@ -235,6 +260,7 @@ class Material implements AnyMaterial {
 
   static fromURL(device: GPUDevice, url: string): Promise<Material>
   static fromBitmap(device: GPUDevice, bitmap: ImageBitmap): Promise<Material>
+  static fromColor(device: GPUDevice, r: number, g: number, b: number, a?: number): Material  // 0–1 float range; a defaults to 1
 
   destroy(): void  // destroys the underlying GPU texture
 }
@@ -284,11 +310,13 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
 
 ```ts
 class FullScreenMaterial implements AnyMaterial {
+  static readonly wgslUniforms: string  // exact WGSL string injected before the fragment shader
+
   readonly kind      = 'fullscreen'
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): FullScreenMaterial
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): FullScreenMaterial
 
   tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
   destroy(): void
@@ -318,11 +346,13 @@ fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
 
 ```ts
 class MeshShaderMaterial implements AnyMaterial {
+  static readonly wgslUniforms: string  // exact WGSL string injected before the fragment shader
+
   readonly kind      = 'mesh-shader'
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline
 
-  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string): MeshShaderMaterial
+  static create(device: GPUDevice, format: GPUTextureFormat, fragmentShader: string, options?: ShaderMaterialOptions): MeshShaderMaterial
 
   tick(elapsed: number, width: number, height: number): void  // call once per frame in scene.update()
   destroy(): void

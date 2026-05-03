@@ -1,4 +1,3 @@
-import { mat4 } from 'gl-matrix';
 import { Scene, Camera, QuadGeometry, Mesh, MeshShaderMaterial, RendererContext } from '../../src/index';
 
 const FRAGMENT_SHADER = /* wgsl */`
@@ -28,13 +27,9 @@ export class MeshShaderScene extends Scene {
     this.mat  = MeshShaderMaterial.create(renderer.device, renderer.format, FRAGMENT_SHADER);
 
     const half = Math.floor(GRID / 2);
-    let slot = 0;
     for (let x = -half; x <= half; x++) {
       for (let y = -half; y <= half; y++) {
-        this.add(new Mesh(geo, this.mat));
-        const m = mat4.create();
-        mat4.translate(m, m, [x, y, 0]);
-        this.updateObjectBufferFromModelMatrix(slot++, m);
+        this.add(new Mesh(geo, this.mat!)).setPosition([x, y, 0]);
       }
     }
   }
@@ -45,8 +40,4 @@ export class MeshShaderScene extends Scene {
     this.camera.update();
   }
 
-  onDetach(): void {
-    this.mat?.destroy();
-    this.mat = undefined;
-  }
 }
