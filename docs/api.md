@@ -298,6 +298,8 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
 
 ```ts
 class FullScreenMaterial implements AnyMaterial {
+  static readonly wgslUniforms: string  // exact WGSL string injected before the fragment shader
+
   readonly kind      = 'fullscreen'
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline
@@ -332,6 +334,8 @@ fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
 
 ```ts
 class MeshShaderMaterial implements AnyMaterial {
+  static readonly wgslUniforms: string  // exact WGSL string injected before the fragment shader
+
   readonly kind      = 'mesh-shader'
   readonly bindGroup: GPUBindGroup
   readonly pipeline:  GPURenderPipeline

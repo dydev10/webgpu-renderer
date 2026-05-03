@@ -15,6 +15,8 @@ struct ShaderUniforms { time: f32, _pad: f32, resolution: vec2<f32> }
 `;
 
 export class FullScreenMaterial {
+  static readonly wgslUniforms: string = UNIFORM_PREAMBLE;
+
   readonly kind = 'fullscreen' as const;
   readonly bindGroup: GPUBindGroup;
   readonly pipeline: GPURenderPipeline;
