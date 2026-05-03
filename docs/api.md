@@ -58,7 +58,7 @@ abstract class Scene {
 
   // Lifecycle -- called by the renderer, not by consumer code
   onAttach(renderer: RendererContext): Promise<void>  // load assets here; call super.onAttach() first
-  onDetach(): void
+  onDetach(): void  // auto-destroys all mesh geometry, materials, and skybox; call super.onDetach() first if overriding
 }
 ```
 

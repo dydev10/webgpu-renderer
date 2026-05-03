@@ -2,7 +2,8 @@ import { mat4 } from 'gl-matrix';
 import { Camera } from '../model/camera';
 import type { SkyboxMaterial } from '../material/SkyboxMaterial';
 import type { Mesh } from '../mesh/Mesh';
-import type { RendererContext, SceneConfig } from '../types/public';
+import type { Geometry } from '../geometry/Geometry';
+import type { AnyMaterial, RendererContext, SceneConfig } from '../types/public';
 import type { InternalRenderData } from '../types/internal';
 import type { ResourceRegistry } from '../registry/ResourceRegistry';
 
@@ -39,7 +40,21 @@ export abstract class Scene {
     this.registry = (renderer as unknown as { registry: ResourceRegistry }).registry;
   }
 
-  onDetach(): void {}
+  onDetach(): void {
+    const geos = new Set<Geometry>();
+    const mats = new Set<AnyMaterial>();
+
+    for (const { mesh } of this.meshEntries) {
+      if (mesh.geometry !== null) geos.add(mesh.geometry);
+      mats.add(mesh.material);
+    }
+
+    for (const geo of geos) geo.destroy();
+    for (const mat of mats) mat.destroy();
+
+    this.skybox?.destroy();
+    this.meshEntries = [];
+  }
 
   buildRenderData(aspect: number): InternalRenderData {
     const worldCalls   = [];

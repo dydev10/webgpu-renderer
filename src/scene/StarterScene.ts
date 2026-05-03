@@ -86,6 +86,11 @@ export class StarterScene extends Scene {
     this.controller = new FirstPersonController(renderer.canvas, this.camera);
   }
 
+  onDetach(): void {
+    super.onDetach();
+    this.controller?.dispose();
+  }
+
   update(_dt?: number): void {
     this.controller?.update();
 

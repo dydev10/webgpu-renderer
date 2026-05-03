@@ -6,6 +6,7 @@
 
 - `WebGPURenderer.isSupported()` — static async check; returns `false` if WebGPU is unavailable or no adapter found.
 - `AnyMaterial.destroy(): void` added to the interface (all concrete classes already implement it).
+- `Scene.onDetach()` auto-destroys all mesh geometry, materials, and skybox. Override with `super.onDetach()` first if you need additional cleanup.
 
 ---
 

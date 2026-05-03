@@ -45,8 +45,4 @@ export class MeshShaderScene extends Scene {
     this.camera.update();
   }
 
-  onDetach(): void {
-    this.mat?.destroy();
-    this.mat = undefined;
-  }
 }
